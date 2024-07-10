@@ -1,0 +1,1 @@
+This folder contains functions that calculate the tensor of inertia of the satellite and its mass

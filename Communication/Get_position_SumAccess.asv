@@ -1,0 +1,10 @@
+function [position_com_time] = Get_position_SumAccess(Access_sum_Times,Inmarsat_postion)
+max_comm=zeros(1,length(Access_sum_Times(:,1)));
+for i=1:length(Access_sum_Times(:,1))
+    b=[Access_sum_Times(i,1),Access_sum_Times(2,1),Access_sum_Times(3,1)];
+    max_comm(i)=max(Access_sum_Times(i,1),Access_sum_Times(2,1),Access_sum_Times(3,1));
+    index=find(b==max_comm(i));
+    position_com_time=[max_comm(i),Inmarsat_postion(i,1*index:1*index+2)];
+
+end
+end

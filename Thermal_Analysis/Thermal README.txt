@@ -1,0 +1,1 @@
+This folder contains the thermal analysis of the satellite
