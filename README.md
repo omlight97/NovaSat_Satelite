@@ -3,7 +3,7 @@
 Hi Everyone!
 Welcome to the repository Novasat Project. In the main branch, the repository contains the last version that was tested and documnetd. 
 The Dev branch is the branch in which you can edit the files and change it's functions fundementaly.
-Open a Dev branch on your own that is relevant to you (named Dev_control or Dev_avionics, etc) and work on that exclusivly. To push:
+To push:
 
 ```
 git add . %add all the files to the next commit
