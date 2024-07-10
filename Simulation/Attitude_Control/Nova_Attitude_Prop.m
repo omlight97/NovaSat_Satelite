@@ -29,10 +29,22 @@ I_to_B = rotx(Phi)*rotz(Psi)*roty(Tet);
 %Magnetic Torque
 % Magnetic_Torque_B = Magnetic_field_function(I_to_B,Params.Magnetic_Field_I,Params.Magnetic_Dipol_B);
 
-if Flags.comm 
+if Flags.Communication 
     %comms logic
-    comms_function();
-elseif Flags.Day 
+    % Target angular rate [rad/sec]
+        p_t = 0;
+        q_t = 0;
+        r_t = 0;
+        w_t = [p_t;q_t;r_t];
+        % Target attitude in terms of euler angles [rad]
+        psi_t = 0;
+        tet_t = 0;
+        phi_t = 0;
+        eul_t = [psi_t,tet_t,phi_t];
+        % Convert to quaternion
+        q_t = eul2quat(eul_t);
+        q_t = flip(q_t);
+elseif Flags.isDay 
     % Sun Search state
     % Get sun vector from Sun Sensor - currently matlab online function approxECISunPosition()
     [Sat2Sun_B,isLOS2Sun] = SunSensorModel(Params.Sat_Pos_I,I_to_B,UTCTime,Flags.SunSensor);
@@ -76,30 +88,28 @@ elseif Flags.Day
         %                 end
         % end
         % Target angular rate [rad/sec]
-        p_t = 0;
-        q_t = 0;
-        r_t = 0;
+        p_t = 1;
+        q_t = 1;
+        r_t = 1;
         w_t = [p_t;q_t;r_t];
         % Target attitude in terms of euler angles [rad]
-        psi_t = 0;
-        tet_t = 0;
-        phi_t = 0;
+        psi_t = 1;
+        tet_t = 1;
+        phi_t = 1;
         eul_t = [psi_t,tet_t,phi_t];
         % Convert to quaternion
         q_t = eul2quat(eul_t);
         q_t = flip(q_t);
-    
-      warning('Invalid state specified.');
     end
     % Target angular rate [rad/sec]
-    p_t = 0;
-    q_t = 0;
-    r_t = 0;
+    p_t = 1;
+    q_t = 1;
+    r_t = 1;
     w_t = [p_t;q_t;r_t];
     % Target attitude in terms of euler angles [rad]
-    psi_t = 0;
-    tet_t = 0;
-    phi_t = 0;
+    psi_t = 1;
+    tet_t = 1;
+    phi_t = 1;
     eul_t = [psi_t,tet_t,phi_t];
     % Convert to quaternion
     q_t = eul2quat(eul_t);
@@ -113,14 +123,14 @@ else
         if any(w_max_check)
             w_i = w_max(w_max_check);
         end        % Target angular rate [rad/sec]
-        p_t = 0;
-        q_t = 0;
-        r_t = 0;
+        p_t = 2;
+        q_t = 2;
+        r_t = 2;
         w_t = [p_t;q_t;r_t];
         % Target attitude in terms of euler angles [rad]
-        psi_t = 0;
-        tet_t = 0;
-        phi_t = 0;
+        psi_t = 2;
+        tet_t = 2;
+        phi_t = 2;
         eul_t = [psi_t,tet_t,phi_t];
         % Convert to quaternion
         q_t = eul2quat(eul_t);
