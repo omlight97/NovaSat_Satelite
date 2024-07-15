@@ -10,6 +10,7 @@ file_names = dir;
 Flags.Can_Continue = 0;
 Flags.Mission_Now = 0;
 Flags.Comms_Now = 0;
+addpath(genpath(pwd));
 [g, h] = IGRF13;
 
 % Checks if the GUI file is in the current directory
@@ -31,9 +32,9 @@ Flags.Comms_Now = 0;
 % [DataBase2.SunTimes, DataBase2.SunPosition]     = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_SunPosition']);
 % [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition']);
 
-[DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\NOVASAT-16U_MatlabReport_-_SunPosition - Copy']);
-[DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\NOVASAT-16U_FullSimulation']);
-[DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition - Copy']);
+[DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_SunPosition - Copy']);
+[DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_FullSimulation']);
+[DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_EarthPosition - Copy']);
 e     = DataBase.SatProperties(:,9);
 i2    = DataBase.SatProperties(:,10);
 f2    = DataBase.SatProperties(:,13);
