@@ -35,14 +35,13 @@ I_to_B = rotx(Phi)*rotz(Psi)*roty(Tet);
 psi_t = 0;
 tet_t = 0;
 phi_t = 0;
-    eul_t = [psi_t,tet_t,phi_t];
+eul_t = [psi_t,tet_t,phi_t];
 
 %Initialize target ang vel [rad/sec]
-
 p_t = 0;
 q_t = 0;
 r_t = 0;
-    w_t = [p_t;q_t;r_t];
+w_t = [p_t;q_t;r_t];
 
 %% Attitude logic
 if Flags.Communication
@@ -51,69 +50,78 @@ if Flags.Communication
     q_t = flip(q_t);
 elseif Flags.IsDay
     % Sun Search state
-    % Get sun vector from Sun Sensor - currently matlab online function approxECISunPosition()
-    [Sat2Sun_B,isLOS2Sun] = SunSensorModel(Params.SatPosition,I_to_B,Flags.SunSensor);
-    if(isLOS2Sun)
-        tet_t = atan(Sat2Sun_B(2)/Sat2Sun_B(1)); %??
-        psi_t = asin(SunSensorPositionVector(3)/uSat2Sun_B(2)); %??
-        phi_t = 0;
-        eul_t = [tet_t;psi_t;phi_t];
-        q_t = eul2quat(eul2t_t);
-        q_t = flip(q_t);
-        % Roatation sequence logic
-        Flags.sun_search.start_logic = 0;
-    % defining sun seach logic - initiates pose and starts a 3 stage
-    % sequence. 
-    %1 - rotate 270 around main axis
-    %2 - rotate 45 pitch and then 270 arund main axis
-    else 
-        if Flags.sun_search.initial_flag% flag to indicate the first iteration of sun sea
-            % [Flags.sun_search.state_one_flag,Flags.sun_search.state_two_flag,Flags.sun_search.state_three_flag] = state_finder(); % function to return the relevant state to this iteration
-            Params.psi0 =  Psi;
-            Params.theta0 =  Tet;
-            Params.phi0 =  Phi;
-            Flags.sun_search.initial_flag = 0;
-            Flags.state_one_flag = 1;
-            Flags.state_two_flag = 0;
-            Flags.state_three_flag = 0;
-        % if 
-        elseif state_one_flag
-            [psi_t,Flags.state_one_flag,Flags.state_two_flag] = rotate_psi_to_psi0_plus_270(psi_0); % pass imu readings untill psi = psi0+270
-            %this if is to reset the initial conditions for the next
-            %manuver
-            if Flags.sun_search.state_one_flag == 0 && Flags.sun_search.state_two_flag == 1
-                Params.psi0 =  Psi;
-                Params.theta0 =  Theta;
-                Params.phi0 =  Phi;
-            end
-        elseif state_two_flag
-            [psi_t,tet_t,Flags.state_two_flag,Flags.state_three_flag] = rotate_theta_45_psi_to_psi0_plus_270(psi_0,Psi,theta,Theta_0); % pass imu readings untill psi = psi0+360
-            if Flags.sun_search.state_two_flag == 0 && Flags.sun_search.state_three_flag == 1
-                Params.psi0 =  Psi;
-                Params.theta0 =  Theta;
-                Params.phi0 =  Phi;
-            end
-        
-        elseif state_three_flag
-            [psi_t,tet_t,Flags.state_three_flag] = rotate_theta_m45_psi_to_psi0_plus_270(); % pass imu readings untill psi = psi0+360
-        
-        else
+    tet_t = 0;%atan2(uSat2Sun_B(2),uSat2Sun_B(1)); %??
+    psi_t = 0;%asin(uSat2Sun_B(3)/uSat2Sun_B(2)); %??
+    phi_t = 0;
+    eul_t = [tet_t;psi_t;phi_t];
 
-            Flags.sun_search.initial_flag = 0;
-            msgbox('Was not able to find sun after 3 rotation sequences.')
-        end
-    eul_t = [phi_t, tet_t ,psi_t];
-    q_t = eul2quat(eul_t);
-    q_t = flip(q_t);
-    end
+    % 
+    % % Get sun vector from Sun Sensor - currently matlab online function approxECISunPosition()
+    % [Sat2Sun_B,isLOS2Sun] = SunSensorModel(Params.SunPosition,Params.SatPosition,I_to_B);
+    % if(isLOS2Sun)
+    %     uSat2Sun_B = Sat2Sun_B/norm(Sat2Sun_B);
+    %     tet_t = 0;%atan2(uSat2Sun_B(2),uSat2Sun_B(1)); %??
+    %     psi_t = 0;%asin(uSat2Sun_B(3)/uSat2Sun_B(2)); %??
+    %     phi_t = 0;
+    %     eul_t = [tet_t;psi_t;phi_t];
+    %     % q_t = eul2quat(eul_t);
+    %     % q_t = flip(q_t);
+    %     % Roatation sequence logic
+    %     Flags.sun_search.start_logic = 0;
+    % % defining sun search logic - initiates pose and starts a 3 stage
+    % % sequence. 
+    % %1 - rotate 270 around main axis
+    % %2 - rotate 45 pitch and then 270 arund main axis
+    % else 
+    %     if Flags.sun_search.initial_flag% flag to indicate the first iteration of sun sea
+    %         % [Flags.sun_search.state_one_flag,Flags.sun_search.state_two_flag,Flags.sun_search.state_three_flag] = state_finder(); % function to return the relevant state to this iteration
+    %         Params.psi0 =  Psi;
+    %         Params.theta0 =  Tet;
+    %         Params.phi0 =  Phi;
+    %         Flags.sun_search.initial_flag = 0;
+    %         Flags.state_one_flag = 1;
+    %         Flags.state_two_flag = 0;
+    %         Flags.state_three_flag = 0;
+    %     % if 
+    %     elseif Flags.state_one_flag
+    %         [psi_t,Flags.state_one_flag,Flags.state_two_flag] = rotate_psi_to_psi0_plus_270(Params.psi0); % pass imu readings untill psi = psi0+270
+    %         %this if is to reset the initial conditions for the next
+    %         %manuver
+    %         if Flags.sun_search.state_one_flag == 0 && Flags.sun_search.state_two_flag == 1
+    %             Params.psi0 =  Psi;
+    %             Params.theta0 =  Theta;
+    %             Params.phi0 =  Phi;
+    %         end
+    %     elseif Flags.state_two_flag
+    %         [psi_t,tet_t,Flags.state_two_flag,Flags.state_three_flag] = rotate_theta_45_psi_to_psi0_plus_270(Params.psi0,Psi,theta,Params.Theta_0); % pass imu readings untill psi = psi0+360
+    %         if Flags.sun_search.state_two_flag == 0 && Flags.sun_search.state_three_flag == 1
+    %             Params.psi0 =  Psi;
+    %             Params.theta0 =  Theta;
+    %             Params.phi0 =  Phi;
+    %         end
+    % 
+    %     elseif Flags.state_three_flag
+    %         [psi_t,tet_t,Flags.state_three_flag] = rotate_theta_m45_psi_to_psi0_plus_270(); % pass imu readings untill psi = psi0+360
+    % 
+    %     else
+    % 
+    %         Flags.sun_search.initial_flag = 0;
+    %         msgbox('Was not able to find sun after 3 rotation sequences.')
+    %     end
+    % eul_t = [phi_t, tet_t ,psi_t];
+    % q_t = eul2quat(eul_t);
+    % q_t = flip(q_t);
+    % end
 elseif ~Flags.IsDay
     % Night state - minimum energy, keep current angle\rates as long as
     % not exceeding max rate
     % Target angular rate [rad/sec]
-    w_max_check = w_i > w_max*w_safty_factor;
-    if any(w_max_check)
-        w_i = w_max(w_max_check);
-    end
+    % w_max=1;
+    % w_safty_factor=1;
+    % w_max_check = w_i > w_max*w_safty_factor;
+    % if any(w_max_check)
+    %     w_i = w_max(w_max_check);
+    % end
 
     % Target angular rate [rad/sec]
     p_t = 2;

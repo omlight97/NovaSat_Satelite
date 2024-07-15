@@ -1,4 +1,4 @@
-function[psi_next done_flag] = rotate_psi_to_psi0_plus_270(psi_0)
+function[psi_next] = rotate_psi_to_psi0_plus_270(psi_0)
 
 % TODO : ASK HILEL FOR GUIDANCE
 psi_next = psi + 1;

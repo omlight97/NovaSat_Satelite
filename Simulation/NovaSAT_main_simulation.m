@@ -8,6 +8,7 @@ clear all;
 
 tic
 file_names = dir;
+Flags.sun_search.initial_flag = 1;
 Flags.Can_Continue = 0;
 Flags.Mission_Now = 0;
 Flags.Comms_Now = 0;
@@ -36,6 +37,7 @@ addpath(genpath(pwd));
 [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_SunPosition']);
 [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_FullSimulation']);
 [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_EarthPosition']);
+
 e     = DataBase.SatProperties(:,9);
 i2    = DataBase.SatProperties(:,10);
 f2    = DataBase.SatProperties(:,13);
