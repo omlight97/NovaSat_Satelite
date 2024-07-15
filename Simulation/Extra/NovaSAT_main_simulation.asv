@@ -36,12 +36,16 @@ Flags.Comms_Now = 0;
 [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition - Copy']);
 e     = DataBase.SatProperties(:,9);
 i2    = DataBase.SatProperties(:,10);
+f2    = DataBase.SatProperties(:,13);
+r_sat=sqrt(DataBase.SatProperties.Var6.^2+DataBase.SatProperties.Var7.^2+DataBase.SatProperties.Var8.^2);
+v_sat=sqrt(DataBase.SatProperties.Var9.^2+DataBase.SatProperties.Var7.^2+DataBase.SatProperties.Var8.^2);
 a     = DataBase.SatProperties(:,8);
 beta=DataBase.SatProperties(:,3);
 Time_vec=DataBase.SatTimes;
 %%
 % Gets vector of Communication time for 3 Satellites(0-No Comm, 1-Comm)
 AccessInmarsatVec = GetAccess(Time_vec,'Inmarsat');
+%Accesstechnion=GetAccess(Time_vec,'Technion');
 AccessSumTime = GetSumAccess(AccessInmarsatVec);
 DayOrNight_vec = GetAccess(Time_vec,'Sun');
 InmarsatPostion=table2array(DataBase.SatProperties(:,22:30));
@@ -77,7 +81,6 @@ OneDay = seconds(hours(24)); %[s]
 %Current_Date = initial_date;
 World_Model.SunPosition0   = World_Model_All.SunPosition(1,:);
 World_Model.EarthPosition0 = World_Model_All.EarthPosition(1,:);
-
 %% Initial Orbital Elements
 
 if ~isfield(Params,'OrbitalElements0')
@@ -119,7 +122,7 @@ if ~isfield(Params,'Attitude_Angles')
 
     % Current_Step_Angular  =  Params.Attitude_rate0;
 else
-    Current_Step_Angular.Psi = Params.Attitude_Angles.Psi;
+        Current_Step_Angular.Psi = Params.Attitude_Angles.Psi;
     Current_Step_Angular.Theta = Params.Attitude_Angles.Theta;
     Current_Step_Angular.Phi = Params.Attitude_Angles0.Phi;
     Current_Step_Angular.P = Params.Attitude_Angles0.P;
@@ -146,9 +149,11 @@ phi_vec=zeros(1,1241);
 Bx=zeros(3,1241);
 By=zeros(1,1241);
 Bz=zeros(1,1241);
+rho2=zeros(1,1241);
 %%
 while  i <  length(DataBase.SunTimes)
-    
+[T, a1, P, rho] = atmosisa(r_sat(i));
+    rho2(i)=rho;
     alpha_G_0=10;
     n=6;
     Params.SunPosition=[DataBase.SunPosition.Var5(i),DataBase.SunPosition.Var6(i),DataBase.SunPosition.Var7(i)];
@@ -202,20 +207,20 @@ while  i <  length(DataBase.SunTimes)
 %     % if i==500
 %     %     Alpha_angle=pi/2;
 %     % end
-%     [Power, next_charge] = Jeri_Calc_Power(Params, Alpha_angle, states, current_charge, dt, Flags);
-%     if next_charge<=0
-%         display('simulation stops');
-%         break
-%     end
-%     SimData.Power.Production(i,:)  = Power.Production;
-%     SimData.Batteries_Electric_Charge(i,:) = next_charge;
-% 
-%     for par = Params.power_budget.Properties.VariableNames
-%         SimData.Power.(char(par))(i) =  Power.(char(par));
-%     end
-%     SimData.Power.Total_Power(i,:) = -Power.Total_Power;
-% 
-%     current_charge = next_charge;
+    [Power, next_charge,DOD] = main_power2(Params,Current_Step_Angular, current_charge, dt, Flags);
+    % if next_charge<=0
+    %     display('simulation stops');
+    %     break
+    % end
+    SimData.Power.Production(i,:)  = Power.Production;
+    SimData.Batteries_Electric_Charge(i,:) = next_charge;
+
+    % for par = Params.power_budget.Properties.VariableNames
+    %     SimData.Power.(char(par))(i) =  Power.(char(par));
+    % end
+    SimData.Power.Total_Power(i,:) = -Power.Total_Power;
+
+    current_charge = next_charge;
 % 
 % %     %% Thermal
 % %     if ~mod(time_vec(i),Numeric_properties.dt_for_thermal)
@@ -285,7 +290,7 @@ while  i <  length(DataBase.SunTimes)
        psi_vec(i) = Next_Angular_State.Psi;
        Theta_vec(i)=Next_Angular_State.Theta;
        phi_vec(i)=Next_Angular_State.Phi;
-       Current_Step_Angular(i) = Next_Angular_State;
+       Current_Step_Angular = Next_Angular_State;
        % 
        % Current_Step_Angular.Psi=Next_Angular_State.Psi;
        % Current_Step_Angular.angles(2)=i.Theta;
@@ -346,16 +351,16 @@ disp('Simulation has completed')
 
 figure()
 subplot(2,3,1);
-%sgtitle(['Orbit For a=', num2str(a(1)), ' [km], i=', num2str(i(1)), '[deg]'])
+% sgtitle(['Orbit For a=', num2str(a(1)), ' [km], i=', num2str(i(1)), '[deg]'])
 a=table2array(a);
 e=table2array(e);
 i2=table2array(i2);
-plot(Time_vec/60,(a)-6378);
+plot(Time_vec/60,r_sat);
 xlabel('time [min]');
-ylabel('h [KM]');
-title('h(t)');
+ylabel('r [KM]');
+title('r(t)');
 grid on;
-ylim([min(a)-6400 max(a)-6340])
+%ylim([min(a)-6400 max(a)-6340])
 
 subplot(2,3,2);
 plot(Time_vec/60,e);
@@ -370,24 +375,48 @@ xlabel('time [min]');
 ylabel('i [deg]');
 title('i(t)');
 grid on;
-subplot(2,3,4);
+figure;
+subplot(2,3,1);
 hold on;
 plot(Time_vec(1:1241)/60,psi_vec);
 xlabel('time [min]');
 ylabel('psi [deg]');
 title('psi vs time');
 grid on;
-subplot(2,3,5);
+subplot(2,3,2);
 hold on;
 plot(Time_vec(1:1241)/60,Theta_vec);
 xlabel('time [min]');
 ylabel('theta [deg]');
 title('theta vs time');
 grid on;
-subplot(2,3,6);
+subplot(2,3,3);
 hold on;
 plot(Time_vec(1:1241)/60,phi_vec);
 xlabel('time [min]');
 ylabel('phi [deg]');
 title('phi vs time');
+grid on;
+%%
+figure;
+subplot(1,3,1);
+hold on;
+plot(Time_vec(1:1240)/60,SimData.Power.Total_Power');
+xlabel('time [min]');
+ylabel('Total Power [w]');
+title('Total Power vs time');
+grid on;
+subplot(1,3,2);
+hold on;
+plot(Time_vec(1:1240)/60,SimData.Power.Production');
+xlabel('time [min]');
+ylabel('Production [w]');
+title('Production vs time');
+grid on;
+subplot(1,3,3);
+hold on;
+plot(Time_vec(1:1240)/60,SimData.Batteries_Electric_Charge');
+xlabel('time [min]');
+ylabel('Batteries Electric_Charge [W]');
+title('Batteries Electric_Charge vs time');
 grid on;
