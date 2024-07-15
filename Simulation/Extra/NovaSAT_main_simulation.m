@@ -122,7 +122,7 @@ if ~isfield(Params,'Attitude_Angles')
 
     % Current_Step_Angular  =  Params.Attitude_rate0;
 else
-        Current_Step_Angular.Psi = Params.Attitude_Angles.Psi;
+    Current_Step_Angular.Psi = Params.Attitude_Angles.Psi;
     Current_Step_Angular.Theta = Params.Attitude_Angles.Theta;
     Current_Step_Angular.Phi = Params.Attitude_Angles0.Phi;
     Current_Step_Angular.P = Params.Attitude_Angles0.P;

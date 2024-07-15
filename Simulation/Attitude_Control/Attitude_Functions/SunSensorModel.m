@@ -1,4 +1,4 @@
-function [uSat2Sun_B,isLOS2Sun,eul2target] = SunSensorModel(Earth2Sun_I,Sat_Pos_I,I_to_B,UTCTime)
+function [uSat2Sun_B,isLOS2Sun,eul2target] = SunSensorModel(Earth2Sun_I,Sat_Pos_I,I_to_B)
     SunSensorFOV = deg2rad(120); %Sun sensor field of view
     SunSensorPositionVector = [0;1;0]; %Sun sensor Heading - assuming pointing side at the moment
     % Earth2Sun_I = approxECISunPosition(UTCTime); % Earth's center to the center of the Sun. - Online function

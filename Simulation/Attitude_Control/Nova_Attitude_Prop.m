@@ -49,10 +49,10 @@ if Flags.Communication
     % Convert to quaternion
     q_t = eul2quat(eul_t); 
     q_t = flip(q_t);
-elseif Flags.isDay
+elseif Flags.IsDay
     % Sun Search state
     % Get sun vector from Sun Sensor - currently matlab online function approxECISunPosition()
-    [Sat2Sun_B,isLOS2Sun] = SunSensorModel(Params.Sat_Pos_I,I_to_B,UTCTime,Flags.SunSensor);
+    [Sat2Sun_B,isLOS2Sun] = SunSensorModel(Params.SatPosition,I_to_B,Flags.SunSensor);
     if(isLOS2Sun)
         tet_t = atan(Sat2Sun_B(2)/Sat2Sun_B(1)); %??
         psi_t = asin(SunSensorPositionVector(3)/uSat2Sun_B(2)); %??
@@ -106,7 +106,7 @@ elseif Flags.isDay
     q_t = eul2quat(eul_t);
     q_t = flip(q_t);
     end
-elseif ~Flags.isDay
+elseif ~Flags.IsDay
     % Night state - minimum energy, keep current angle\rates as long as
     % not exceeding max rate
     % Target angular rate [rad/sec]
