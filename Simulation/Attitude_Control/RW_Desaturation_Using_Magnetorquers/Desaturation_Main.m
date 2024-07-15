@@ -12,7 +12,7 @@ set(0,'defaultLineLineWidth',1.5,'defaultLineMarkerSize',8)
 %% Initial conditions
 initial_phi   = deg2rad(0);
 initial_theta = deg2rad(10);
-initial_psi   = deg2rad(0);
+initial_psi   = deg2rad(20);
 eul_i = [initial_phi,initial_theta,initial_psi];
 % Convert to quaternion
 q_i = eul2quat(eul_i);
@@ -20,7 +20,7 @@ q_i = flip(q_i);
 % Set initial conditions to simulink
 Params.q0 = q_i;
 Params.w0 = [0;0;5]; % Angular Velocity [deg/sec]
-Params.w0_W = 0*[1,1,1,1]';
+Params.w0_W = deg2rad([10;10;10;10]);
 
 %% Target conditions
 target_phi = deg2rad(0);
@@ -33,14 +33,11 @@ q_t = flip(q_t);
 % Set initial conditions to simulink
 Params.q_T = q_t;
 
-% External Torque 
-SolarRadiation_torque = [0;0;0];
-Drag_torque = [0;0;0];
-Params.External_Torque  = Drag_torque + SolarRadiation_torque;
-
-% Magnetotourquers  
-Magneto_torque = [0;0;0];
-Params.Magneto_Torque  = Magneto_torque;
+% External Torques
+SolarRadiation_External_Torque = [0;0;0];
+Drag_External_Torque = [0;0;0];
+Magneto_External_Torque = [0;0;0];
+Params.External_Torque  = SolarRadiation_External_Torque + Drag_External_Torque + Magneto_External_Torque;
 
 %% Pararmeters
 % Inertia matrix [kg*m^2]
@@ -88,8 +85,9 @@ Params.Winv = pinv(Params.W); % Inverse of the wheel config matrix
 Params.torquebox = load('torquebox_modified.mat'); % Given by the manufacturer, the input is the controller output, the output is the torque working on each wheel 
 
 % Wheel limits 
-H_lim = 0.03; % Angular momentum limit [Nms] 
+H_lim = 0.0015;%0.03; % Angular momentum limit [Nms] 
 T_lim = 2e-3; % Torque limit [Nm]
+Params.H_lim = H_lim;
 
 ss_eul = 30; % Target Euler angle for cruise control loop [degree]
 
@@ -192,4 +190,3 @@ plot(t,angle_error);
 xlabel('t[sec]');
 ylabel('\phi_{error}[deg]');
 grid on
-
