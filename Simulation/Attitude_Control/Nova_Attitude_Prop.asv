@@ -93,29 +93,28 @@ elseif Flags.isDay
         q_t = eul2quat(eul_t);
         q_t = flip(q_t);
     end
-    % warning('Invalid state specified.');
+    
+    warning('Invalid state specified.');
 else
     % Night state - minimum energy, keep current angle\rates as long as
       % not exceeding max rate
-    % Target angular rate [rad/sec]
-    w_max_check = w_i > w_max*w_safty_factor;
-    if any(w_max_check)
-        w_i = w_max(w_max_check);
-    end        
-    
-    % Target angular rate [rad/sec]
-    p_t = 2;
-    q_t = 2;
-    r_t = 2;
-    w_t = [p_t;q_t;r_t];
-    % Target attitude in terms of euler angles [rad]
-    psi_t = 2;
-    tet_t = 2;
-    phi_t = 2;
-    eul_t = [psi_t,tet_t,phi_t];
-    % Convert to quaternion
-    q_t = eul2quat(eul_t);
-    q_t = flip(q_t);
+        % Target angular rate [rad/sec]
+        w_max_check = w_i > w_max*w_safty_factor;
+        if any(w_max_check)
+            w_i = w_max(w_max_check);
+        end        % Target angular rate [rad/sec]
+        p_t = 2;
+        q_t = 2;
+        r_t = 2;
+        w_t = [p_t;q_t;r_t];
+        % Target attitude in terms of euler angles [rad]
+        psi_t = 2;
+        tet_t = 2;
+        phi_t = 2;
+        eul_t = [psi_t,tet_t,phi_t];
+        % Convert to quaternion
+        q_t = eul2quat(eul_t);
+        q_t = flip(q_t);
 end
  
 OverrideSimulink = true;
