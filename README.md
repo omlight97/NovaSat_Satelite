@@ -10,7 +10,7 @@ git add . %add all the files to the next commit
 git commit -m <YOUR_MESSEGE> 
 git push
 ```
-
+ 
 To add the changes you made to the main branch - once you push the changes create a merge request in GITHUB.
 
 To make sure you are on the currect Dev branch, simply run in MATLAB command prompt or any IDE:
