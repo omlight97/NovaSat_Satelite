@@ -5,7 +5,7 @@ function [uSat2Sun_B,isLOS2Sun,eul2target] = SunSensorModel(Earth2Sun_I,Sat_Pos_
     % Earth2Sun_I = Earth2Sun_I';
     
     Sat2Sun_I = Sat_Pos_I - Earth2Sun_I;
-    Sat2Sun_B = I_to_B*Sat2Sun_I;
+    Sat2Sun_B = I_to_B*Sat2Sun_I';
 
     uSat2Sun_B = Sat2Sun_B./norm(Sat2Sun_B); % Satellite center to the center of the Sun (unit vector). - body frame
 

@@ -35,14 +35,13 @@ I_to_B = rotx(Phi)*rotz(Psi)*roty(Tet);
 psi_t = 0;
 tet_t = 0;
 phi_t = 0;
-    eul_t = [psi_t,tet_t,phi_t];
+eul_t = [psi_t,tet_t,phi_t];
 
 %Initialize target ang vel [rad/sec]
-
 p_t = 0;
 q_t = 0;
 r_t = 0;
-    w_t = [p_t;q_t;r_t];
+w_t = [p_t;q_t;r_t];
 
 %% Attitude logic
 if Flags.Communication
@@ -52,17 +51,18 @@ if Flags.Communication
 elseif Flags.IsDay
     % Sun Search state
     % Get sun vector from Sun Sensor - currently matlab online function approxECISunPosition()
-    [Sat2Sun_B,isLOS2Sun] = SunSensorModel(Params.SatPosition,I_to_B,Flags.SunSensor);
+    [Sat2Sun_B,isLOS2Sun] = SunSensorModel(Params.SunPosition,Params.SatPosition,I_to_B);
     if(isLOS2Sun)
-        tet_t = atan(Sat2Sun_B(2)/Sat2Sun_B(1)); %??
-        psi_t = asin(SunSensorPositionVector(3)/uSat2Sun_B(2)); %??
+        uSat2Sun_B = Sat2Sun_B/norm(Sat2Sun_B);
+        tet_t = 0;%atan2(uSat2Sun_B(2),uSat2Sun_B(1)); %??
+        psi_t = 0;%asin(uSat2Sun_B(3)/uSat2Sun_B(2)); %??
         phi_t = 0;
         eul_t = [tet_t;psi_t;phi_t];
-        q_t = eul2quat(eul2t_t);
-        q_t = flip(q_t);
+        % q_t = eul2quat(eul_t);
+        % q_t = flip(q_t);
         % Roatation sequence logic
         Flags.sun_search.start_logic = 0;
-    % defining sun seach logic - initiates pose and starts a 3 stage
+    % defining sun search logic - initiates pose and starts a 3 stage
     % sequence. 
     %1 - rotate 270 around main axis
     %2 - rotate 45 pitch and then 270 arund main axis
