@@ -7,6 +7,7 @@ close all;
 clear all;
 tic
 file_names = dir;
+Flags.sun_search.initial_flag = 1;
 Flags.Can_Continue = 0;
 Flags.Mission_Now = 0;
 Flags.Comms_Now = 0;
