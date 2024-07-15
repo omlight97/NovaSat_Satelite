@@ -20,9 +20,9 @@ P = Current_Step_Angular.P;
 Q = Current_Step_Angular.Q;
 R = Current_Step_Angular.R;
 w_i = [P;Q;R];
-% Convert to quaternion
-q_w_i = eul2quat(w_i);
-q_w_i = flip(q_w_i);
+% % Convert to quaternion
+% q_w_i = eul2quat(w_i);
+% q_w_i = flip(q_w_i);
 
 %% Helping calculations
 % I_to_B matrix

@@ -181,7 +181,7 @@ while  i <  length(DataBase.SunTimes)
     if PositionCommTime(i,2)>15
         Flags.Communication=1;
     else
-        Flags.Communication=1;
+        Flags.Communication=0;
     end
     if strcmp(states.Logic,'operational')
         if Flags.Day
@@ -289,22 +289,22 @@ while  i <  length(DataBase.SunTimes)
         
         
         %% Attitude
-%         [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags, Params);
-%         SimData.Angular_State(i,:) = Next_Angular_State;
-%        % SimData.Wheels_Data(i,:) = Wheels_Data;
-%         %SimData.More_Data_Attitude_Control(i,:) = More_Data_Attitude_Control; %Name should be given!
-%     %end
-%        psi_vec(i) = Next_Angular_State.Psi;
-%        Theta_vec(i)=Next_Angular_State.Theta;
-%        phi_vec(i)=Next_Angular_State.Phi;
-%        Current_Step_Angular = Next_Angular_State;
-%        % 
-%        % Current_Step_Angular.Psi=Next_Angular_State.Psi;
-%        % Current_Step_Angular.angles(2)=i.Theta;
-%        % Current_Step_Angular.angles(3)=Next_Angular_State.Phi;
-%        % Current_Step_Angular.rate(1)=Next_Angular_State.P;
-%        % Current_Step_Angular.rate(2)=Next_Angular_State.Q;
-%        % Current_Step_Angular.rate(3)=Next_Angular_State.R;
+        [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags, Params);
+        SimData.Angular_State(i,:) = Next_Angular_State;
+       % SimData.Wheels_Data(i,:) = Wheels_Data;
+        %SimData.More_Data_Attitude_Control(i,:) = More_Data_Attitude_Control; %Name should be given!
+    %end
+       psi_vec(i) = Next_Angular_State.Psi;
+       Theta_vec(i)=Next_Angular_State.Theta;
+       phi_vec(i)=Next_Angular_State.Phi;
+       Current_Step_Angular = Next_Angular_State;
+       % 
+       % Current_Step_Angular.Psi=Next_Angular_State.Psi;
+       % Current_Step_Angular.angles(2)=i.Theta;
+       % Current_Step_Angular.angles(3)=Next_Angular_State.Phi;
+       % Current_Step_Angular.rate(1)=Next_Angular_State.P;
+       % Current_Step_Angular.rate(2)=Next_Angular_State.Q;
+       % Current_Step_Angular.rate(3)=Next_Angular_State.R;
 
     %% Orbit
 
