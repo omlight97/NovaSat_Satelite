@@ -136,17 +136,17 @@ Params.mass  = 15.3;     % mass [kg]
 Params.CP_AL = 921.096;  % Aluminum heat capacity [J/kg*K]
 
 %% Attitude Control
-Params.Attitude_Angles0.Psi   = 5; % Initial attitude [deg]
-Params.Attitude_Angles0.Theta = 10; % Initial attitude [deg]
-Params.Attitude_Angles0.Phi   = 12; % Initial attitude [deg]
+Params.Attitude_Angles0.Psi   = 1; % Initial attitude [rad]
+Params.Attitude_Angles0.Theta = 0.5; % Initial attitude [rad]
+Params.Attitude_Angles0.Phi   = 3; % Initial attitude [rad]
 
-Params.Attitude_rate0.P   = 0.1;   % Initial angular rate [deg/s]
-Params.Attitude_rate0.Q   = 0;   % Initial angular rate [deg/s]
-Params.Attitude_rate0.R   = 0;   % Initial angular rate [deg/s]
+Params.Attitude_rate0.P   = 0.1;   % Initial angular rate [rad/s]
+Params.Attitude_rate0.Q   = 0;   % Initial angular rate [rad/s]
+Params.Attitude_rate0.R   = 0;   % Initial angular rate [rad/s]
 
-Params.p_max = 0.05;          % Maximum roll rate  [rad\s]
-Params.q_max = Params.p_max;  % Maximum pitch rate [rad\s]
-Params.r_max = Params.p_max;  % Maximum yaw rate   [rad\s]
+Params.p_max = 0.05;          % Maximum roll rate  [rad/s]
+Params.q_max = Params.p_max;  % Maximum pitch rate [rad/s]
+Params.r_max = Params.p_max;  % Maximum yaw rate   [rad/s]
 
 % Controller Gains
 Params.gains.kpx = 6.102e-02; 
