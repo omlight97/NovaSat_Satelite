@@ -26,3 +26,4 @@ Good Luck!
 ## TODO:
 - Add titles indicating which simulation is which
 - Add a "add to path" command in the beggining of main
+- Add 'try - catch' when dealing with multiple OS (Mac/windows)
