@@ -24,3 +24,5 @@ This repository includes functions, images, models and data files extracted from
 Good Luck!
 
 ## TODO:
+- Add titles indicating which simulation is which
+- Add a "add to path" command in the beggining of main
