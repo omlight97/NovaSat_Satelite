@@ -1,4 +1,4 @@
-function [Next_Angular_State,Attitude_Control_Data,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags,Params)
+function [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags,Params)
 % NovaSat Attitude SIMULATION
 % Originally by: May Alon (Jericco)
 % NovaSAT editors: Shai Peled & Edos Osazuwa

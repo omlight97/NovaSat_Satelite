@@ -82,7 +82,7 @@ Total_Power = Power_Production - total_power_current_mode; %[w] Power available 
 
 
 if current_charge + Total_Power*dt*Params.sec_to_hour < Params.Max_capacity % check for overcharge
-    next_charge = current_charge + Total_Power*dt*Params.sec_to_hour;
+    next_charge =   Total_Power*dt*Params.sec_to_hour;
 else
     next_charge = Params.Max_capacity;
 end

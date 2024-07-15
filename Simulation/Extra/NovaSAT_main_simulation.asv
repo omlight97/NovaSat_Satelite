@@ -38,14 +38,14 @@ e     = DataBase.SatProperties(:,9);
 i2    = DataBase.SatProperties(:,10);
 f2    = DataBase.SatProperties(:,13);
 r_sat=sqrt(DataBase.SatProperties.Var6.^2+DataBase.SatProperties.Var7.^2+DataBase.SatProperties.Var8.^2);
-v_sat=sqrt(DataBase.SatProperties.Var9.^2+DataBase.SatProperties.Var7.^2+DataBase.SatProperties.Var8.^2);
+v_sat=sqrt(DataBase.SatProperties.Var9.^2+DataBase.SatProperties.Var10.^2+DataBase.SatProperties.Var11.^2);
 a     = DataBase.SatProperties(:,8);
 beta=DataBase.SatProperties(:,3);
 Time_vec=DataBase.SatTimes;
 %%
 % Gets vector of Communication time for 3 Satellites(0-No Comm, 1-Comm)
 AccessInmarsatVec = GetAccess(Time_vec,'Inmarsat');
-%Accesstechnion=GetAccess(Time_vec,'Technion');
+% AccessTechnion = GetAccess(Time_vec,'GS');
 AccessSumTime = GetSumAccess(AccessInmarsatVec);
 DayOrNight_vec = GetAccess(Time_vec,'Sun');
 InmarsatPostion=table2array(DataBase.SatProperties(:,22:30));
@@ -150,10 +150,12 @@ Bx=zeros(3,1241);
 By=zeros(1,1241);
 Bz=zeros(1,1241);
 rho2=zeros(1,1241);
+q=zeros(1,1241);
 %%
 while  i <  length(DataBase.SunTimes)
 [T, a1, P, rho] = atmosisa(r_sat(i));
     rho2(i)=rho;
+    q(i)=0.5*rho*v_sat(i)^2;
     alpha_G_0=10;
     n=6;
     Params.SunPosition=[DataBase.SunPosition.Var5(i),DataBase.SunPosition.Var6(i),DataBase.SunPosition.Var7(i)];
@@ -162,6 +164,11 @@ while  i <  length(DataBase.SunTimes)
     SatPosition=[Current_Step_Orbit.r(1),Current_Step_Orbit.r(2),Current_Step_Orbit.r(3)];
     else
         SatPosition=table2array(Current_Step_Orbit.r);
+    end
+    if i==1
+    SatVelocity=[Current_Step_Orbit.v(1),Current_Step_Orbit.v(2),Current_Step_Orbit.v(3)];
+    else
+        SatVelocity=table2array(Current_Step_Orbit.v);
     end
     Params.SatPosition=SatPosition;
     Flags.Day = Day_or_Night(Params, Params.SatPosition,Params.SunPosition);
@@ -282,7 +289,7 @@ while  i <  length(DataBase.SunTimes)
         
         
         %% Attitude
-        [Next_Angular_State,Attitude_Control_Data,Flags2] = Nova_Attitude_Prop(Current_Step_Angular,Flags, Params);
+        [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags, Params);
         SimData.Angular_State(i,:) = Next_Angular_State;
        % SimData.Wheels_Data(i,:) = Wheels_Data;
         %SimData.More_Data_Attitude_Control(i,:) = More_Data_Attitude_Control; %Name should be given!
