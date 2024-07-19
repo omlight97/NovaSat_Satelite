@@ -47,7 +47,7 @@ I_to_B = rotx(phi_i)*rotz(psi_i)*roty(tet_i);
 % Current Satellite\Sun\ImmarSat position
 SatPosition = Params.SatPosition';
 SunPosition = Params.SunPosition';
-CommsSatPosition = Params.CommsSatPosition'; %Fix the position to immarsat
+CommsSatPosition = Params.CommsSatPosition'; 
 
 % Max angular rate [rad/sec]
 w_max = [Params.p_max;Params.q_max;Params.r_max];
@@ -55,16 +55,22 @@ w_max = [Params.p_max;Params.q_max;Params.r_max];
 %% Attitude logic
 if Flags.Communication
     % Communication State Logic - attitude towards: Immar Satellites
-    [eul_t,q_eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition,CommsSatPosition);
+    [eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition,CommsSatPosition);
 elseif Flags.IsDay
     % Sun Search State Logic - attitude towards: Sun
-    [eul_t,q_eul_t,w_t] = SunSearch_Att_Logic(eul_t,I_to_B,SatPosition,SunPosition,Flags);
+    [eul_t,w_t] = SunSearch_Att_Logic(eul_t,I_to_B,SatPosition,SunPosition,Flags);
 elseif ~Flags.IsDay
     % Night state - minimum energy, keep current angle\rates as long as
     % not exceeding max rate
-    [eul_t,q_eul_t,w_t] = Night_Att_Logic(w_max);
+    [eul_t,w_t] = Night_Att_Logic(w_max);
 end
 
+% Convert euler angles to quaternion
+q_eul_t = eul2quat(eul_t);
+q_eul_t = flip(q_eul_t);
+
+
+%% Simulink
 OverrideSimulink = true;
 if(OverrideSimulink)
     % Calculated target angular state [rad]
@@ -77,8 +83,64 @@ if(OverrideSimulink)
     Next_Step_Angular.R = w_t(3);
     Params.Attitude_Control_Data = 0;
 else
+    % Set conditions to simulink
+    Params.q0 = q_eul_i;
+    Params.w0 = w_i; % Angular Velocity [deg/sec]
+    Params.w0_W = deg2rad([0;0;0;0]);
+    Params.q_T = q_t;
+    % External Torques
+    SolarRadiation_External_Torque = [0;0;0];
+    Drag_External_Torque = [0;0;0];
+    Magneto_External_Torque = [0;0;0];
+    Params.External_Torque  = SolarRadiation_External_Torque + Drag_External_Torque + Magneto_External_Torque;
+    % Inertia matrix [kg*m^2]
+    I_conv = 1/10^9;
+    Ixx = 136536680.23*I_conv;
+    Ixy = -2302943.14*I_conv;
+    Ixz = -456852.60*I_conv;
+    Iyx = -2302943.14*I_conv;
+    Iyy = 102436630.43*I_conv;
+    Iyz = -1019138.10*I_conv;
+    Izx = -456852.60*I_conv;
+    Izy = -1019138.10*I_conv;
+    Izz = 141529348.05*I_conv;
+    Params.J = [Ixx,Ixy,Ixz;
+                Iyx,Iyy,Iyz;
+                Izx,Izy,Izz];
+    % wheel's inertia [kg*m^2]
+    m_rw = 0.400;
+    Dimensions_rw = [67;25;67]./1000; 
+    Params.Jw = m_rw/12 * (Dimensions_rw(1)^2 + Dimensions_rw(2)^2);
+    % PD Controller gains:
+    zeta = 0.7; % Damping ratio
+    wn = 0.1; % omega_n - Natural frequency
+    gain_mult = 1;
+    kp = gain_mult*2*wn*wn*Params.J(1,1); % Proportional controller gain
+    kd = 2*zeta*wn*10*Params.J(1,1);      % Derivative controller gain
+    Params.gains.kpx = kp;
+    Params.gains.kdx = kd;
+    Params.gains.kpy = kp;
+    Params.gains.kdy = kd;
+    Params.gains.kpz = kp;
+    Params.gains.kdz = kd;
+    % Wheel configuration - Pyramid 
+    aux = 1/sqrt(3); % Factoring by 1/sqrt(3) to get nicer looking vectors in the code
+    Params.W1 = aux * [1;-1;1]; % Coordinates of the corresponding wheel
+    Params.W2 = aux * [-1;1;1]; 
+    Params.W3 = aux * [-1;-1;1]; 
+    Params.W4 = aux * [1;1;1]; 
+    Params.W = [Params.W1,Params.W2,Params.W3,Params.W4]; % Wheel config matrix
+    Params.Winv = pinv(Params.W); % Inverse of the wheel config matrix
+    Params.torquebox = load('torquebox_modified.mat'); % Given by the manufacturer, the input is the controller output, the output is the torque working on each wheel 
+    % Wheel limits 
+    H_lim = 0.0015;%0.03; % Angular momentum limit [Nms] 
+    T_lim = 2e-3; % Torque limit [Nm]
+    Params.H_lim = H_lim;
+
+
     % Simulate - attitude control
     Outsim = sim('Control_Sim');
+
     % Export data from simulation
     Data = Outsim.Data.signals.values(:,:,:);
     Data = reshape(Data,[17 length(Data)]);
@@ -115,7 +177,7 @@ end
 end
 
 
-function [eul_t,q_eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosition_I)
+function [eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosition_I)
     % Communication State Logic
     Z_B = [1;0;0]; %Z axis in body frame
     Sat2Comms_I = SatPosition_I - CommsSatPosition_I;
@@ -124,14 +186,13 @@ function [eul_t,q_eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosi
     psi_t = asin(Z_B(3)/uSat2Comms_B(2));
     tet_t = atan(uSat2Comms_B(2)/uSat2Comms_B(1)); 
     phi_t = 0;
-
-    tet_t = 0;
+    
     psi_t = 0;
+    tet_t = 0;
     phi_t = 0;
 
-    eul_t = [tet_t;psi_t;phi_t];
-    q_eul_t = eul2quat(eul_t);
-    q_eul_t = flip(q_eul_t);
+    eul_t = [psi_t,tet_t,phi_t];
+
     % Target angular rate [rad/sec]
     p_t = 0;
     q_t = 0;
@@ -139,7 +200,7 @@ function [eul_t,q_eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosi
     w_t = [p_t;q_t;r_t];
 end
 
-function [eul_t,q_eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition_I,SunPosition_I,Flags)
+function [eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition_I,SunPosition_I,Flags)
     %% Sun Search State Logic
     % Current attitude in terms of euler angles [rad]
     psi_i = eul_i(1);
@@ -199,9 +260,6 @@ function [eul_t,q_eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition_I,Su
     % phi_t = 1;
     % eul_t = [psi_t,tet_t,phi_t];
 
-    % Convert to quaternion
-    q_eul_t = eul2quat(eul_t);
-    q_eul_t = flip(q_eul_t);
     % Target angular rate [rad/sec]
     p_t = 0;
     q_t = 0;
@@ -209,7 +267,7 @@ function [eul_t,q_eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition_I,Su
     w_t = [p_t;q_t;r_t];
 end
 
-function [eul_t,q_eul_t,w_t] = Night_Att_Logic(w_max)
+function [eul_t,w_t] = Night_Att_Logic(w_max)
     % Target angular rate [rad/sec]
     % w_max=1;
     % w_safty_factor=1;
@@ -217,14 +275,13 @@ function [eul_t,q_eul_t,w_t] = Night_Att_Logic(w_max)
     % if any(w_max_check)
     %     w_i = w_max(w_max_check);
     % end
+
     % Target attitude in terms of euler angles [rad]
     psi_t = 2;
     tet_t = 2;
     phi_t = 2;
     eul_t = [psi_t,tet_t,phi_t];
-    % Convert to quaternion
-    q_eul_t = eul2quat(eul_t);
-    q_eul_t = flip(q_eul_t);
+    
     % Target angular rate [rad/sec]
     p_t = 2;
     q_t = 2;

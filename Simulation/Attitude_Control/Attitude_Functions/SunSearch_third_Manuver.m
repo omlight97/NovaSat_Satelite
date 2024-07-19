@@ -1,5 +1,5 @@
 function[eul_t state_three_flag] = SunSearch_third_Manuver(eul0,eul_i)
-    %rotate_theta_-45_psi_to_psi0_plus_270
+    %rotate_theta_-90_psi_to_psi0_plus_270
     psi_i = eul_i(1);
     tet_i = eul_i(2);
     phi_i = eul_i(3);
