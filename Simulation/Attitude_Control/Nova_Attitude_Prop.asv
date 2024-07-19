@@ -124,16 +124,14 @@ function [eul_t,q_eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosi
     psi_t = asin(Z_B(3)/uSat2Comms_B(2));
     tet_t = atan(uSat2Comms_B(2)/uSat2Comms_B(1)); 
     phi_t = 0;
-    
-    psi_t = 0;
+
     tet_t = 0;
+    psi_t = 0;
     phi_t = 0;
-    
-    eul_t = [psi_t,tet_t,phi_t];
-    % Convert to quaternion
+
+    eul_t = [tet_t;psi_t;phi_t];
     q_eul_t = eul2quat(eul_t);
     q_eul_t = flip(q_eul_t);
-
     % Target angular rate [rad/sec]
     p_t = 0;
     q_t = 0;
