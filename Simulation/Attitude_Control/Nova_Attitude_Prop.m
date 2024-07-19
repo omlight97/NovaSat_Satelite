@@ -47,7 +47,7 @@ I_to_B = rotx(phi_i)*rotz(psi_i)*roty(tet_i);
 % Current Satellite\Sun\ImmarSat position
 SatPosition = Params.SatPosition';
 SunPosition = Params.SunPosition';
-CommsSatPosition = Params.CommsSatPosition'; %Fix the position to immarsat
+CommsSatPosition = Params.CommsSatPosition'; 
 
 % Max angular rate [rad/sec]
 w_max = [Params.p_max;Params.q_max;Params.r_max];
@@ -55,15 +55,19 @@ w_max = [Params.p_max;Params.q_max;Params.r_max];
 %% Attitude logic
 if Flags.Communication
     % Communication State Logic - attitude towards: Immar Satellites
-    [eul_t,q_eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition,CommsSatPosition);
+    [eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition,CommsSatPosition);
 elseif Flags.IsDay
     % Sun Search State Logic - attitude towards: Sun
-    [eul_t,q_eul_t,w_t] = SunSearch_Att_Logic(eul_t,I_to_B,SatPosition,SunPosition,Flags);
+    [eul_t,w_t] = SunSearch_Att_Logic(eul_t,I_to_B,SatPosition,SunPosition,Flags);
 elseif ~Flags.IsDay
     % Night state - minimum energy, keep current angle\rates as long as
     % not exceeding max rate
-    [eul_t,q_eul_t,w_t] = Night_Att_Logic(w_max);
+    [eul_t,w_t] = Night_Att_Logic(w_max);
 end
+% Convert euler angles to quaternion
+q_eul_t = eul2quat(eul_t);
+q_eul_t = flip(q_eul_t);
+
 
 OverrideSimulink = true;
 if(OverrideSimulink)
@@ -115,7 +119,7 @@ end
 end
 
 
-function [eul_t,q_eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosition_I)
+function [eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosition_I)
     % Communication State Logic
     Z_B = [1;0;0]; %Z axis in body frame
     Sat2Comms_I = SatPosition_I - CommsSatPosition_I;
@@ -128,11 +132,8 @@ function [eul_t,q_eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosi
     psi_t = 0;
     tet_t = 0;
     phi_t = 0;
-    
+
     eul_t = [psi_t,tet_t,phi_t];
-    % Convert to quaternion
-    q_eul_t = eul2quat(eul_t);
-    q_eul_t = flip(q_eul_t);
 
     % Target angular rate [rad/sec]
     p_t = 0;
@@ -141,7 +142,7 @@ function [eul_t,q_eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosi
     w_t = [p_t;q_t;r_t];
 end
 
-function [eul_t,q_eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition_I,SunPosition_I,Flags)
+function [eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition_I,SunPosition_I,Flags)
     %% Sun Search State Logic
     % Current attitude in terms of euler angles [rad]
     psi_i = eul_i(1);
@@ -201,9 +202,6 @@ function [eul_t,q_eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition_I,Su
     % phi_t = 1;
     % eul_t = [psi_t,tet_t,phi_t];
 
-    % Convert to quaternion
-    q_eul_t = eul2quat(eul_t);
-    q_eul_t = flip(q_eul_t);
     % Target angular rate [rad/sec]
     p_t = 0;
     q_t = 0;
@@ -211,7 +209,7 @@ function [eul_t,q_eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition_I,Su
     w_t = [p_t;q_t;r_t];
 end
 
-function [eul_t,q_eul_t,w_t] = Night_Att_Logic(w_max)
+function [eul_t,w_t] = Night_Att_Logic(w_max)
     % Target angular rate [rad/sec]
     % w_max=1;
     % w_safty_factor=1;
@@ -219,14 +217,13 @@ function [eul_t,q_eul_t,w_t] = Night_Att_Logic(w_max)
     % if any(w_max_check)
     %     w_i = w_max(w_max_check);
     % end
+    
     % Target attitude in terms of euler angles [rad]
     psi_t = 2;
     tet_t = 2;
     phi_t = 2;
     eul_t = [psi_t,tet_t,phi_t];
-    % Convert to quaternion
-    q_eul_t = eul2quat(eul_t);
-    q_eul_t = flip(q_eul_t);
+    
     % Target angular rate [rad/sec]
     p_t = 2;
     q_t = 2;
