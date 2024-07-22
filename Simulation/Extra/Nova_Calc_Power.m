@@ -73,16 +73,20 @@ total_power_current_mode = Mode_data(:,'Total_Power').Variables;
 
 % power production calculation
 if Flags.IsDay
-    Power_Production = Params.vertical_power_produc*cos(theta_angle);
+    Power_Production = Params.vertical_power_produc*abs(cos(theta_angle));
+    Total_Power = Power_Production - total_power_current_mode; %[w] Power available to charge the batteries
+
 else
     Power_Production = 0;
+    Total_Power = current_charge/(60) - total_power_current_mode; %[w] Power available to charge the batteries
+
 end
 
-Total_Power = Power_Production - total_power_current_mode; %[w] Power available to charge the batteries
+% Total_Power = Power_Production - total_power_current_mode; %[w] Power available to charge the batteries
 
 
-if current_charge + Total_Power*dt*Params.sec_to_hour < Params.Max_capacity % check for overcharge
-    next_charge =   Total_Power*dt*Params.sec_to_hour;
+if current_charge + Total_Power*dt/3600 < Params.Max_capacity % check for overcharge
+    next_charge =   Total_Power*dt/3600;
 else
     next_charge = Params.Max_capacity;
 end
