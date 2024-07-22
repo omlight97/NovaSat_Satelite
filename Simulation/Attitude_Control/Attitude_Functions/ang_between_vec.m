@@ -1,4 +1,4 @@
-function eul = edosfunc(a,b)
+function eul = ang_between_vec(a,b)
     na   = a / norm(a);
     nb   = b / norm(b);
     v    = cross(na, nb);
