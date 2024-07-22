@@ -11,6 +11,9 @@ psi_i   = Current_Step_Angular.Psi;
 tet_i = Current_Step_Angular.Theta;
 phi_i   = Current_Step_Angular.Phi;
 eul_i = [psi_i,tet_i,phi_i];
+% Convert euler angles to quaternion
+q_eul_i = eul2quat(eul_i);
+q_eul_i = flip(q_eul_i);
 
 % Current angular rate [rad/sec]
 p_i = Current_Step_Angular.P;
@@ -82,7 +85,7 @@ q_eul_t = flip(q_eul_t);
 
 
 %% Simulink
-OverrideSimulink = true;
+OverrideSimulink = false;
 if(OverrideSimulink)
     % Calculated target angular state [rad]
     Next_Step_Angular.Psi = eul_t(1);
