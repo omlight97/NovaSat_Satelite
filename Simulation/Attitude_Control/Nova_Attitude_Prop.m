@@ -47,9 +47,9 @@ CommsSatPosition_ECI = Params.CommsSatPosition';
 %Sat2Sun
 Sat2Sun_ECI = SatPosition_ECI - SunPosition_ECI;
 orbital_elements = table2array(Params.orbital_elements);
-inc = orbital_elements(3);
-RAAN = orbital_elements(4);
-theta = orbital_elements(5) + orbital_elements(6);
+inc = deg2rad(orbital_elements(3));
+RAAN = deg2rad(orbital_elements(4));
+theta = deg2rad(orbital_elements(5) + orbital_elements(6));
 Sat2Sun_LVLH = eci2LVLH(Sat2Sun_ECI,RAAN,inc,theta);
 Sat2Sun_Body = LVLH_to_Body*Sat2Sun_LVLH;
 %Sat2Comms
