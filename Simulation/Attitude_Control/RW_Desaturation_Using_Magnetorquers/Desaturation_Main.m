@@ -8,7 +8,6 @@ close all;
 set(0,'DefaultAxesFontName','Times','DefaultAxesFontSize',12)
 set(0,'defaultLineLineWidth',1.5,'defaultLineMarkerSize',8)
 
-
 %% Initial conditions
 initial_phi   = deg2rad(0);
 initial_theta = deg2rad(10);
@@ -30,7 +29,7 @@ eul_t = [target_phi,target_theta,target_psi];
 % Convert to quaternion
 q_t = eul2quat(eul_t);
 q_t = flip(q_t);
-% Set initial conditions to simulink
+% Set target conditions to simulink
 Params.q_T = q_t;
 
 % External Torques
@@ -40,6 +39,7 @@ Magneto_External_Torque = [0;0;0];
 Params.External_Torque  = SolarRadiation_External_Torque + Drag_External_Torque + Magneto_External_Torque;
 
 %% Pararmeters
+%Update to 16U!
 % Inertia matrix [kg*m^2]
 I_conv = 1/10^9;
 Ixx = 136536680.23*I_conv;

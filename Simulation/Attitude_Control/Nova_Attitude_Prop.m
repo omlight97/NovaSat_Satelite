@@ -1,4 +1,4 @@
-function [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags,Params)
+function [Next_Step_Angular,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Params,Flags)
 % NovaSat Attitude SIMULATION
 % Originally by: May Alon (Jericco)
 % NovaSAT editors: Shai Peled & Edos Osazuwa
@@ -7,151 +7,134 @@ function [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Ang
 
 %% Current step euler angles and angular rates
 % Current attitude in terms of euler angles [rad]
-Psi   = Current_Step_Angular.Psi;
-Tet = Current_Step_Angular.Theta;
-Phi   = Current_Step_Angular.Phi;
-eul_i = [Psi,Tet,Phi];
-% Convert to quaternion
-q_eul_i = eul2quat(eul_i);
-q_eul_i = flip(q_eul_i);
+psi_i   = Current_Step_Angular.Psi;
+tet_i = Current_Step_Angular.Theta;
+phi_i   = Current_Step_Angular.Phi;
+eul_i = [psi_i,tet_i,phi_i];
 
 % Current angular rate [rad/sec]
-P = Current_Step_Angular.P;
-Q = Current_Step_Angular.Q;
-R = Current_Step_Angular.R;
-w_i = [P;Q;R];
-% % Convert to quaternion
-% q_w_i = eul2quat(w_i);
-% q_w_i = flip(q_w_i);
+p_i = Current_Step_Angular.P;
+q_i = Current_Step_Angular.Q;
+r_i = Current_Step_Angular.R;
+w_i = [p_i;q_i;r_i];
 
-%% Helping calculations
-% I_to_B matrix
-I_to_B = rotx(Phi)*rotz(Psi)*roty(Tet);
-
-%Magnetic Torque
-% Magnetic_Torque_B = Magnetic_field_function(I_to_B,Params.Magnetic_Field_I,Params.Magnetic_Dipol_B);
-
-%Initialize target quaternion [rad]
+%% Initialize taregt euler angles and angular rates
+% Initialize targen attitude in terms of euler angles [rad]
 psi_t = 0;
 tet_t = 0;
 phi_t = 0;
 eul_t = [psi_t,tet_t,phi_t];
 
-%Initialize target ang vel [rad/sec]
+% Initialize target angular rate [rad/sec]
 p_t = 0;
 q_t = 0;
 r_t = 0;
 w_t = [p_t;q_t;r_t];
 
+%% Helping calculations
+% I_to_B matrix
+I_to_B = rotx(phi_i)*rotz(psi_i)*roty(tet_i);
+
+% Magnetic Torque
+% Magnetic_Torque_B = Magnetic_field_function(I_to_B,Params.Magnetic_Field_I,Params.Magnetic_Dipol_B);
+
+% Current Satellite\Sun\ImmarSat position
+SatPosition = Params.SatPosition';
+SunPosition = Params.SunPosition';
+CommsSatPosition = Params.CommsSatPosition'; 
+
+% Max angular rate [rad/sec]
+w_max = [Params.p_max;Params.q_max;Params.r_max];
+
 %% Attitude logic
 if Flags.Communication
-    % Convert to quaternion
-    q_t = eul2quat(eul_t); 
-    q_t = flip(q_t);
+    % Communication State Logic - attitude towards: Immar Satellites
+    [eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition,CommsSatPosition);
 elseif Flags.IsDay
-    % Sun Search state
-    tet_t = 0;%atan2(uSat2Sun_B(2),uSat2Sun_B(1)); %??
-    psi_t = 0;%asin(uSat2Sun_B(3)/uSat2Sun_B(2)); %??
-    phi_t = 0;
-    eul_t = [tet_t;psi_t;phi_t];
-
-    % 
-    % % Get sun vector from Sun Sensor - currently matlab online function approxECISunPosition()
-    % [Sat2Sun_B,isLOS2Sun] = SunSensorModel(Params.SunPosition,Params.SatPosition,I_to_B);
-    % if(isLOS2Sun)
-    %     uSat2Sun_B = Sat2Sun_B/norm(Sat2Sun_B);
-    %     tet_t = 0;%atan2(uSat2Sun_B(2),uSat2Sun_B(1)); %??
-    %     psi_t = 0;%asin(uSat2Sun_B(3)/uSat2Sun_B(2)); %??
-    %     phi_t = 0;
-    %     eul_t = [tet_t;psi_t;phi_t];
-    %     % q_t = eul2quat(eul_t);
-    %     % q_t = flip(q_t);
-    %     % Roatation sequence logic
-    %     Flags.sun_search.start_logic = 0;
-    % % defining sun search logic - initiates pose and starts a 3 stage
-    % % sequence. 
-    % %1 - rotate 270 around main axis
-    % %2 - rotate 45 pitch and then 270 arund main axis
-    % else 
-    %     if Flags.sun_search.initial_flag% flag to indicate the first iteration of sun sea
-    %         % [Flags.sun_search.state_one_flag,Flags.sun_search.state_two_flag,Flags.sun_search.state_three_flag] = state_finder(); % function to return the relevant state to this iteration
-    %         Params.psi0 =  Psi;
-    %         Params.theta0 =  Tet;
-    %         Params.phi0 =  Phi;
-    %         Flags.sun_search.initial_flag = 0;
-    %         Flags.state_one_flag = 1;
-    %         Flags.state_two_flag = 0;
-    %         Flags.state_three_flag = 0;
-    %     % if 
-    %     elseif Flags.state_one_flag
-    %         [psi_t,Flags.state_one_flag,Flags.state_two_flag] = rotate_psi_to_psi0_plus_270(Params.psi0); % pass imu readings untill psi = psi0+270
-    %         %this if is to reset the initial conditions for the next
-    %         %manuver
-    %         if Flags.sun_search.state_one_flag == 0 && Flags.sun_search.state_two_flag == 1
-    %             Params.psi0 =  Psi;
-    %             Params.theta0 =  Theta;
-    %             Params.phi0 =  Phi;
-    %         end
-    %     elseif Flags.state_two_flag
-    %         [psi_t,tet_t,Flags.state_two_flag,Flags.state_three_flag] = rotate_theta_45_psi_to_psi0_plus_270(Params.psi0,Psi,theta,Params.Theta_0); % pass imu readings untill psi = psi0+360
-    %         if Flags.sun_search.state_two_flag == 0 && Flags.sun_search.state_three_flag == 1
-    %             Params.psi0 =  Psi;
-    %             Params.theta0 =  Theta;
-    %             Params.phi0 =  Phi;
-    %         end
-    % 
-    %     elseif Flags.state_three_flag
-    %         [psi_t,tet_t,Flags.state_three_flag] = rotate_theta_m45_psi_to_psi0_plus_270(); % pass imu readings untill psi = psi0+360
-    % 
-    %     else
-    % 
-    %         Flags.sun_search.initial_flag = 0;
-    %         msgbox('Was not able to find sun after 3 rotation sequences.')
-    %     end
-    % eul_t = [phi_t, tet_t ,psi_t];
-    % q_t = eul2quat(eul_t);
-    % q_t = flip(q_t);
-    % end
+    % Sun Search State Logic - attitude towards: Sun
+    [eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition,SunPosition,Flags);
 elseif ~Flags.IsDay
     % Night state - minimum energy, keep current angle\rates as long as
     % not exceeding max rate
-    % Target angular rate [rad/sec]
-    % w_max=1;
-    % w_safty_factor=1;
-    % w_max_check = w_i > w_max*w_safty_factor;
-    % if any(w_max_check)
-    %     w_i = w_max(w_max_check);
-    % end
-
-    % Target angular rate [rad/sec]
-    p_t = 2;
-    q_t = 2;
-    r_t = 2;
-    w_t = [p_t;q_t;r_t];
-    % Target attitude in terms of euler angles [rad]
-    psi_t = 2;
-    tet_t = 2;
-    phi_t = 2;
-    eul_t = [psi_t,tet_t,phi_t];
-    % Convert to quaternion
-    q_t = eul2quat(eul_t);
-    q_t = flip(q_t);
+    [eul_t,w_t] = Night_Att_Logic(w_max);
 end
 
+% Convert euler angles to quaternion
+q_eul_t = eul2quat(eul_t);
+q_eul_t = flip(q_eul_t);
+
+
+%% Simulink
 OverrideSimulink = true;
 if(OverrideSimulink)
-    % Calculated next angular state
-    Next_Angular_State.Psi = eul_t(1);
-    Next_Angular_State.Theta = eul_t(2);
-    Next_Angular_State.Phi = eul_t(3);
-
-    Next_Angular_State.P = w_t(1);
-    Next_Angular_State.Q = w_t(2);
-    Next_Angular_State.R = w_t(3);
-    Attitude_Control_Data = 0;
+    % Calculated target angular state [rad]
+    Next_Step_Angular.Psi = eul_t(1);
+    Next_Step_Angular.Theta = eul_t(2);
+    Next_Step_Angular.Phi = eul_t(3);
+    % Calculated target angular rate [rad\s]
+    Next_Step_Angular.P = w_t(1);
+    Next_Step_Angular.Q = w_t(2);
+    Next_Step_Angular.R = w_t(3);
+    Params.Attitude_Control_Data = 0;
 else
+    % Set conditions to simulink
+    Params.q0 = q_eul_i;
+    Params.w0 = w_i; % Angular Velocity [deg/sec]
+    Params.w0_W = deg2rad([0;0;0;0]);
+    Params.q_T = q_t;
+    % External Torques
+    SolarRadiation_External_Torque = [0;0;0];
+    Drag_External_Torque = [0;0;0];
+    Magneto_External_Torque = [0;0;0];
+    Params.External_Torque  = SolarRadiation_External_Torque + Drag_External_Torque + Magneto_External_Torque;
+    % Inertia matrix [kg*m^2]
+    I_conv = 1/10^9;
+    Ixx = 136536680.23*I_conv;
+    Ixy = -2302943.14*I_conv;
+    Ixz = -456852.60*I_conv;
+    Iyx = -2302943.14*I_conv;
+    Iyy = 102436630.43*I_conv;
+    Iyz = -1019138.10*I_conv;
+    Izx = -456852.60*I_conv;
+    Izy = -1019138.10*I_conv;
+    Izz = 141529348.05*I_conv;
+    Params.J = [Ixx,Ixy,Ixz;
+                Iyx,Iyy,Iyz;
+                Izx,Izy,Izz];
+    % wheel's inertia [kg*m^2]
+    m_rw = 0.400;
+    Dimensions_rw = [67;25;67]./1000; 
+    Params.Jw = m_rw/12 * (Dimensions_rw(1)^2 + Dimensions_rw(2)^2);
+    % PD Controller gains:
+    zeta = 0.7; % Damping ratio
+    wn = 0.1; % omega_n - Natural frequency
+    gain_mult = 1;
+    kp = gain_mult*2*wn*wn*Params.J(1,1); % Proportional controller gain
+    kd = 2*zeta*wn*10*Params.J(1,1);      % Derivative controller gain
+    Params.gains.kpx = kp;
+    Params.gains.kdx = kd;
+    Params.gains.kpy = kp;
+    Params.gains.kdy = kd;
+    Params.gains.kpz = kp;
+    Params.gains.kdz = kd;
+    % Wheel configuration - Pyramid 
+    aux = 1/sqrt(3); % Factoring by 1/sqrt(3) to get nicer looking vectors in the code
+    Params.W1 = aux * [1;-1;1]; % Coordinates of the corresponding wheel
+    Params.W2 = aux * [-1;1;1]; 
+    Params.W3 = aux * [-1;-1;1]; 
+    Params.W4 = aux * [1;1;1]; 
+    Params.W = [Params.W1,Params.W2,Params.W3,Params.W4]; % Wheel config matrix
+    Params.Winv = pinv(Params.W); % Inverse of the wheel config matrix
+    Params.torquebox = load('torquebox_modified.mat'); % Given by the manufacturer, the input is the controller output, the output is the torque working on each wheel 
+    % Wheel limits 
+    H_lim = 0.0015;%0.03; % Angular momentum limit [Nms] 
+    T_lim = 2e-3; % Torque limit [Nm]
+    Params.H_lim = H_lim;
+
+
     % Simulate - attitude control
     Outsim = sim('Control_Sim');
+
     % Export data from simulation
     Data = Outsim.Data.signals.values(:,:,:);
     Data = reshape(Data,[17 length(Data)]);
@@ -165,24 +148,131 @@ else
     eul_error = quat2eul(flip(q_error)');
 
     % Calculated next angular state
-    Next_Angular_State.Psi = eul_f(1);
-    Next_Angular_State.Theta = eul_f(2);
-    Next_Angular_State.Phi = eul_f(3);
+    Next_Step_Angular.Psi = eul_f(1);
+    Next_Step_Angular.Theta = eul_f(2);
+    Next_Step_Angular.Phi = eul_f(3);
 
-    Next_Angular_State.P = w_f(1);
-    Next_Angular_State.Q = w_f(2);
-    Next_Angular_State.R = w_f(3);
+    Next_Step_Angular.P = w_f(1);
+    Next_Step_Angular.Q = w_f(2);
+    Next_Step_Angular.R = w_f(3);
 
-    Attitude_Control_Data.Psi_error = eul_error(1);
-    Attitude_Control_Data.Theta_error = eul_error(2);
-    Attitude_Control_Data.Phi_error = eul_error(3);
+    Params.Attitude_Control_Data.Psi_error = eul_error(1);
+    Params.Attitude_Control_Data.Theta_error = eul_error(2);
+    Params.Attitude_Control_Data.Phi_error = eul_error(3);
 
-    Attitude_Control_Data.P_error = w_error(1);
-    Attitude_Control_Data.Q_error = w_error(2);
-    Attitude_Control_Data.R_error = w_error(3);
+    Params.Attitude_Control_Data.P_error = w_error(1);
+    Params.Attitude_Control_Data.Q_error = w_error(2);
+    Params.Attitude_Control_Data.R_error = w_error(3);
 
-    Attitude_Control_Data.Lc = Tc(1);
-    Attitude_Control_Data.Mc = Tc(2);
-    Attitude_Control_Data.Nc = Tc(3);
+    Params.Attitude_Control_Data.Lc = Tc(1);
+    Params.Attitude_Control_Data.Mc = Tc(2);
+    Params.Attitude_Control_Data.Nc = Tc(3);
 end
+end
+
+
+function [eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosition_I)
+    % Communication State Logic
+    Z_B = [1;0;0]; %Z axis in body frame
+    Sat2Comms_I = SatPosition_I - CommsSatPosition_I;
+    Sat2Comms_B = I_to_B*Sat2Comms_I;
+    uSat2Comms_B = Sat2Comms_B./norm(Sat2Comms_B); 
+    psi_t = asin(Z_B(3)/uSat2Comms_B(2));
+    tet_t = atan(uSat2Comms_B(2)/uSat2Comms_B(1)); 
+    phi_t = 0;
+    
+    psi_t = 0;
+    tet_t = 0;
+    phi_t = 0;
+
+    eul_t = [psi_t,tet_t,phi_t];
+
+    % Target angular rate [rad/sec]
+    p_t = 0;
+    q_t = 0;
+    r_t = 0;
+    w_t = [p_t;q_t;r_t];
+end
+
+function [eul_t,w_t] = SunSearch_Att_Logic(eul_i,I_to_B,SatPosition_I,SunPosition_I,Flags)
+    %% Sun Search State Logic
+    SunSensorFOV = deg2rad(120); %Sun sensor field of view
+    SunSensorPositionVector_B = [0;1;0]; %Sun sensor Heading - assuming pointing side at the moment
+    Sat2Sun_I = SatPosition_I - SunPosition_I;
+    Sat2Sun_B = I_to_B*Sat2Sun_I;
+    uSat2Sun_B = Sat2Sun_B./norm(Sat2Sun_B); % Satellite center to the center of the Sun (unit vector). - body frame
+    isLOS2Sun = dot(SunSensorPositionVector_B, uSat2Sun_B) > cos(SunSensorFOV);
+
+    isLOS2Sun = true; %% temp - until logic is completed and verifyied
+
+    if(isLOS2Sun) % is sun in field of view
+        psi_t = asin(SunSensorPositionVector_B(3)/uSat2Sun_B(2));
+        tet_t = atan(uSat2Sun_B(2)/uSat2Sun_B(1)); 
+        phi_t = 0;
+        eul_t = [psi_t,tet_t,phi_t];
+    else % Roatation sequence logic
+        %0 - Initial sunsearch logic algorithm
+        if Flags.sun_search.initial_flag
+            Params.eul0 =  [psi_i,tet_i,phi_i];
+            Flags.sun_search.initial_flag = 0;
+            Flags.state_one_flag = 1;
+            Flags.state_two_flag = 0;
+            Flags.state_three_flag = 0;
+        %1 - rotate 270 around main axis
+        elseif Flags.state_one_flag
+            [eul_t,Flags.state_one_flag,Flags.state_two_flag] = SunSearch_first_Manuver(Params.eul0,eul_i); % pass imu readings untill psi = psi0+270
+            %if finished first manuver, reset the initial conditions for the second manuver
+            if Flags.sun_search.state_one_flag == 0 && Flags.sun_search.state_two_flag == 1
+                Params.eul0 =  [psi_i,tet_i,phi_i];
+            end
+        %2 - rotate 45 pitch and then 270 arund main axis
+        elseif Flags.state_two_flag
+            [eul_t,Flags.state_two_flag,Flags.state_three_flag] = SunSearch_second_Manuver(Params.eul0,eul_i); % pass imu readings untill psi = psi0+360
+            %if finished second manuver, reset the initial conditions for the third manuver
+            if Flags.sun_search.state_two_flag == 0 && Flags.sun_search.state_three_flag == 1
+                Params.eul0 =  [psi_i,tet_i,phi_i];
+            end
+        %3 - rotate -90 pitch and then 270 arund main axis
+        elseif Flags.state_three_flag
+            [eul_t,Flags.state_three_flag] = SunSearch_third_Manuver(Params.eul0,eul_i); % pass imu readings untill psi = psi0+360
+        %4 - Error
+        else
+            Flags.sun_search.initial_flag = 0;
+            msgbox('Was not able to find sun after 3 rotation sequences.')
+        end
+    end
+
+    % % Target attitude in terms of euler angles [rad]
+    % psi_t = 1;
+    % tet_t = 1;
+    % phi_t = 1;
+    % eul_t = [psi_t,tet_t,phi_t];
+
+    % Target angular rate [rad/sec]
+    p_t = 0;
+    q_t = 0;
+    r_t = 0;
+    w_t = [p_t;q_t;r_t];
+end
+
+function [eul_t,w_t] = Night_Att_Logic(w_max)
+    % Target angular rate [rad/sec]
+    % w_max=1;
+    % w_safty_factor=1;
+    % w_max_check = w_i > w_max*w_safty_factor;
+    % if any(w_max_check)
+    %     w_i = w_max(w_max_check);
+    % end
+
+    % Target attitude in terms of euler angles [rad]
+    psi_t = 2;
+    tet_t = 2;
+    phi_t = 2;
+    eul_t = [psi_t,tet_t,phi_t];
+    
+    % Target angular rate [rad/sec]
+    p_t = 2;
+    q_t = 2;
+    r_t = 2;
+    w_t = [p_t;q_t;r_t];
 end
