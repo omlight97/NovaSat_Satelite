@@ -33,10 +33,15 @@ addpath(genpath(pwd));
 
 % [DataBase2.SunTimes, DataBase2.SunPosition]     = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_SunPosition']);
 % [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition']);
-
-[DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_SunPosition']);
-[DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_FullSimulation']);
-[DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_EarthPosition']);
+try
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+catch
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+end
 
 e     = DataBase.SatProperties(:,9);
 i2    = DataBase.SatProperties(:,10);
@@ -156,6 +161,7 @@ while  i <=  length(DataBase.SunTimes)
     alpha_G_0=10;
     n=6;
     Params.SunPosition=[DataBase.SunPosition.Var5(i),DataBase.SunPosition.Var6(i),DataBase.SunPosition.Var7(i)];
+    Params.CommsSatPosition = PositionCommTime(i,3:5);
     % External calculations (Alpha_angle, Date, Day or Night)
     if i==1
     SatPosition=[Current_Step_Orbit.r(1),Current_Step_Orbit.r(2),Current_Step_Orbit.r(3)];
@@ -286,15 +292,15 @@ while  i <=  length(DataBase.SunTimes)
         
         
         %% Attitude Control
-        [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags, Params);
-        SimData.Angular_State(i,:) = Next_Angular_State;
+        [Next_Step_Angular,Params,Flags] = Nova_Attitude_Prop_new(Current_Step_Angular,Params,Flags);
+        SimData.Angular_State(i,:) = Next_Step_Angular;
        % SimData.Wheels_Data(i,:) = Wheels_Data;
         %SimData.More_Data_Attitude_Control(i,:) = More_Data_Attitude_Control; %Name should be given!
     %end
-       psi_vec(i) = Next_Angular_State.Psi;
-       Theta_vec(i)=Next_Angular_State.Theta;
-       phi_vec(i)=Next_Angular_State.Phi;
-       Current_Step_Angular = Next_Angular_State;
+       psi_vec(i) = Next_Step_Angular.Psi;
+       Theta_vec(i)=Next_Step_Angular.Theta;
+       phi_vec(i)=Next_Step_Angular.Phi;
+       Current_Step_Angular = Next_Step_Angular;
        % 
        % Current_Step_Angular.Psi=Next_Angular_State.Psi;
        % Current_Step_Angular.angles(2)=i.Theta;

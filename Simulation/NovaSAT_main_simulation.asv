@@ -5,8 +5,10 @@
 clc;
 close all;
 clear all;
+
 tic
 file_names = dir;
+Flags.sun_search.initial_flag = 1;
 Flags.Can_Continue = 0;
 Flags.Mission_Now = 0;
 Flags.Comms_Now = 0;
@@ -35,6 +37,7 @@ addpath(genpath(pwd));
 [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_SunPosition']);
 [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_FullSimulation']);
 [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_EarthPosition']);
+
 e     = DataBase.SatProperties(:,9);
 i2    = DataBase.SatProperties(:,10);
 f2    = DataBase.SatProperties(:,13);
@@ -144,19 +147,13 @@ Thermal.Average_Temperature = Params.Initial_Temperature;
 
 
 T_final = Time_vec(end); % [s]
-psi_vec=zeros(1,DataBase.);
-Theta_vec=zeros(1,1241);
-phi_vec=zeros(1,1241);
-Bx=zeros(3,1241);
-By=zeros(1,1241);
-Bz=zeros(1,1241);
-rho2=zeros(1,1241);
-q=zeros(1,1241);
+psi_vec=zeros(size(DataBase.EarthTimes));
+Theta_vec=zeros(size(DataBase.EarthTimes));
+phi_vec=zeros(size(DataBase.EarthTimes));
+B_vec=zeros(3,length(phi_vec));
+
 %%
-while  i <  length(DataBase.SunTimes)
-[T, a1, P, rho] = atmosisa(r_sat(i));
-    rho2(i)=rho;
-    q(i)=0.5*rho*v_sat(i)^2;
+while  i <=  length(DataBase.SunTimes)
     alpha_G_0=10;
     n=6;
     Params.SunPosition=[DataBase.SunPosition.Var5(i),DataBase.SunPosition.Var6(i),DataBase.SunPosition.Var7(i)];
@@ -175,8 +172,8 @@ while  i <  length(DataBase.SunTimes)
     Flags.Day = Day_or_Night(Params, Params.SatPosition,Params.SunPosition);
     Flags.IsDay =DayOrNight_vec(i);
     SimData.Day_Or_Night(i) = DayOrNight_vec(i);
-    [Bx(:,i)]  = earthmagfield13(SatPosition', Time_vec(i), g, h, alpha_G_0, n);
-    Params.MagneticField=Bx;
+    [B_vec(:,i)]  = earthmagfield13(SatPosition', Time_vec(i), g, h, alpha_G_0, n);
+    Params.MagneticField=B_vec;
     Params.Communication=PositionCommTime;
 %     if Flags.Skip
     if PositionCommTime(i,2)>15
@@ -220,15 +217,18 @@ while  i <  length(DataBase.SunTimes)
     %     display('simulation stops');
     %     break
     % end
-    SimData.Power.Production(i,:)  = Power.Production;
-    SimData.Batteries_Electric_Charge(i,:) = next_charge;
+    SimData.Power.Production(i)  = Power.Production;
+    SimData.Batteries_Electric_Charge(i) = next_charge;
 
     % for par = Params.power_budget.Properties.VariableNames
     %     SimData.Power.(char(par))(i) =  Power.(char(par));
     % end
-    SimData.Power.Total_Power(i,:) = Power.Total_Power;
-
+    SimData.Power.Total_Power(i) = Power.Total_Power;
+    SimData.Power.DoD(i) = DOD;
     current_charge = next_charge;
+    if Power.Total_Power <60
+        Flags.Communication=0;
+    end
 % 
 % %     %% Thermal
 % %     if ~mod(time_vec(i),Numeric_properties.dt_for_thermal)
@@ -289,8 +289,9 @@ while  i <  length(DataBase.SunTimes)
 %         end
         
         
-        %% Attitude
-        [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags, Params);
+        %% Attitude Control
+        PositionCommTime2 = [PositionCommTime(i,3),PositionCommTime(i,4),PositionCommTime(i,5)];
+        [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags, Params,PositionCommTime2);
         SimData.Angular_State(i,:) = Next_Angular_State;
        % SimData.Wheels_Data(i,:) = Wheels_Data;
         %SimData.More_Data_Attitude_Control(i,:) = More_Data_Attitude_Control; %Name should be given!
@@ -358,26 +359,26 @@ disp('Simulation has completed')
 %% plot
 
 figure()
-subplot(2,3,1);
+subplot(1,3,1);
 % sgtitle(['Orbit For a=', num2str(a(1)), ' [km], i=', num2str(i(1)), '[deg]'])
 a=table2array(a);
 e=table2array(e);
 i2=table2array(i2);
-plot(Time_vec/60,r_sat);
+plot(Time_vec/60,r_sat-6378);
 xlabel('time [min]');
-ylabel('r [KM]');
-title('r(t)');
+ylabel('SMA [KM]');
+title('a(t)');
 grid on;
 %ylim([min(a)-6400 max(a)-6340])
 
-subplot(2,3,2);
+subplot(1,3,2);
 plot(Time_vec/60,e);
 xlabel('time [min]');
 ylabel('e'); ylim([-0.02,0.05]);
 title('e(t)');
 grid on;
 
-subplot(2,3,3);
+subplot(1,3,3);
 plot(Time_vec/60,i2);
 xlabel('time [min]');
 ylabel('i [deg]');
@@ -386,45 +387,52 @@ grid on;
 figure;
 subplot(2,3,1);
 hold on;
-plot(Time_vec(1:1241)/60,psi_vec);
+plot(Time_vec/60,psi_vec);
 xlabel('time [min]');
 ylabel('psi [deg]');
 title('psi vs time');
 grid on;
 subplot(2,3,2);
 hold on;
-plot(Time_vec(1:1241)/60,Theta_vec);
+plot(Time_vec/60,Theta_vec);
 xlabel('time [min]');
 ylabel('theta [deg]');
 title('theta vs time');
 grid on;
 subplot(2,3,3);
 hold on;
-plot(Time_vec(1:1241)/60,phi_vec);
+plot(Time_vec/60,phi_vec);
 xlabel('time [min]');
 ylabel('phi [deg]');
 title('phi vs time');
 grid on;
 %%
 figure;
-subplot(1,3,1);
+subplot(1,4,1);
 hold on;
-plot(Time_vec(1:1240)/60,SimData.Power.Total_Power');
+plot(Time_vec/60,SimData.Power.Total_Power');
 xlabel('time [min]');
 ylabel('Total Power [w]');
 title('Total Power vs time');
 grid on;
-subplot(1,3,2);
+subplot(1,4,2);
 hold on;
-plot(Time_vec(1:1240)/60,SimData.Power.Production');
+plot(Time_vec/60,SimData.Power.Production');
 xlabel('time [min]');
 ylabel('Production [w]');
 title('Production vs time');
 grid on;
-subplot(1,3,3);
+subplot(1,4,3);
 hold on;
-plot(Time_vec(1:1240)/60,SimData.Batteries_Electric_Charge');
+plot(Time_vec/60,SimData.Batteries_Electric_Charge');
 xlabel('time [min]');
 ylabel('Batteries Electric_Charge [W]');
 title('Batteries Electric_Charge vs time');
+grid on;
+subplot(1,4,4);
+hold on;
+plot(Time_vec/60,SimData.Power.DoD');
+xlabel('time [min]');
+ylabel('DOD');
+title('DOD vs time');
 grid on;
