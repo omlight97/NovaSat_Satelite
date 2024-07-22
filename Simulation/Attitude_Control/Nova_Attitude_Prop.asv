@@ -47,7 +47,7 @@ orbital_elements = table2array(Params.orbital_elements);
 inc = orbital_elements(3);
 RAAN = orbital_elements(4);
 theta = orbital_elements(5) + orbital_elements(6);
-Sat2Sun_LVLH = eci2LVLH(Sat2Sun_ECI,RAAN,inc,theta);
+Sat2Sun_LVLH = ECI2LVLH(Sat2Sun_ECI,RAAN,inc,theta);
 Sat2Sun_Body = LVLH_to_Body*Sat2Sun_LVLH;
 
 Sat2Comms_ECI = SatPosition_ECI - CommsSatPosition_ECI;
@@ -182,25 +182,21 @@ end
 end
 
 
-function [eul_t,w_t] = Comms_Att_Logic(Sat2Comms_Body)
-    %% Communication State Logic
-    % Z_B = [1;0;0]; %Z axis in body frame
-    % Sat2Comms_I = SatPosition_I - CommsSatPosition_I;
-    % Sat2Comms_B = I_to_B*Sat2Comms_I;
-    % uSat2Comms_B = Sat2Comms_B./norm(Sat2Comms_B); 
-    % psi_t = asin(Z_B(3)/uSat2Comms_B(2));
-    % tet_t = atan(uSat2Comms_B(2)/uSat2Comms_B(1)); 
-    % phi_t = 0;
-    % 
-    % psi_t = 0;
-    % tet_t = 0;
-    % phi_t = 0;
-    % 
-    % eul_t = [psi_t,tet_t,phi_t];
+function [eul_t,w_t] = Comms_Att_Logic(I_to_B,SatPosition_I,CommsSatPosition_I)
+    % Communication State Logic
+    Z_B = [1;0;0]; %Z axis in body frame
+    Sat2Comms_I = SatPosition_I - CommsSatPosition_I;
+    Sat2Comms_B = I_to_B*Sat2Comms_I;
+    uSat2Comms_B = Sat2Comms_B./norm(Sat2Comms_B); 
+    psi_t = asin(Z_B(3)/uSat2Comms_B(2));
+    tet_t = atan(uSat2Comms_B(2)/uSat2Comms_B(1)); 
+    phi_t = 0;
+    
+    psi_t = 0;
+    tet_t = 0;
+    phi_t = 0;
 
-    uSat2Comms_Body = Sat2Comms_Body./norm(Sat2Comms_Body); 
-    eul_t = ang_between_vec(Z_B,uSat2Comms_Body);
-
+    eul_t = [psi_t,tet_t,phi_t];
 
     % Target angular rate [rad/sec]
     p_t = 0;
