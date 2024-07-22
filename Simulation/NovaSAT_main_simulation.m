@@ -239,7 +239,8 @@ while  i <=  length(DataBase.SunTimes)
     SimData.Power.Total_Power(i,:) = Power.Total_Power;
 
     current_charge = next_charge;
-% 
+
+    DOD_vec(i) = DOD;
 % %     %% Thermal
 % %     if ~mod(time_vec(i),Numeric_properties.dt_for_thermal)
 % % %         Thermal = Jeri_Calc_Thermal(World_Model, Current_Step_Angular, Current_Step_Orbit, Power, Flags, dt, Params, Thermal);
@@ -310,6 +311,16 @@ while  i <=  length(DataBase.SunTimes)
        Theta_vec(i)=Next_Step_Angular.Theta;
        phi_vec(i)=Next_Step_Angular.Phi;
        Current_Step_Angular = Next_Step_Angular;
+       %   psi_vec(i) = 0;
+       % Theta_vec(i)=0;
+       % phi_vec(i)=0;
+       % % Current_Step_Angular = Next_Step_Angular;
+       % Current_Step_Angular.Psi=0;
+       %        Current_Step_Angular.Phi=0;
+       %         Current_Step_Angular.Theta=0;
+
+
+       
        % 
        % Current_Step_Angular.Psi=Next_Angular_State.Psi;
        % Current_Step_Angular.angles(2)=i.Theta;
@@ -459,24 +470,32 @@ grid on;
 legend('inmarsat1','inmarsat2','inmarsat3');
 %%
 figure;
-subplot(1,3,1);
+subplot(1,4,1);
 hold on;
 plot(Time_vec/60,SimData.Power.Total_Power');
 xlabel('time [min]');
 ylabel('Total Power [w]');
 title('Total Power vs time');
 grid on;
-subplot(1,3,2);
+% ylim([0 200]);
+subplot(1,4,2);
 hold on;
 plot(Time_vec/60,SimData.Power.Production');
 xlabel('time [min]');
 ylabel('Production [w]');
 title('Production vs time');
 grid on;
-subplot(1,3,3);
+subplot(1,4,3);
 hold on;
 plot(Time_vec/60,SimData.Batteries_Electric_Charge');
 xlabel('time [min]');
 ylabel('Batteries ElectricCharge [W]');
 title('Batteries ElectricCharge vs time');
+grid on;
+subplot(1,4,4)
+hold on;
+plot(Time_vec/60,DOD_vec);
+xlabel('time [min]');
+ylabel('%');
+title('DOD vs time');
 grid on;

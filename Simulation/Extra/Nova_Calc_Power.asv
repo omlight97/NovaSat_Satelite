@@ -87,8 +87,7 @@ if Flags.IsDay
 
 else
     Power_Production = 0;
-   if current_charge == Params.Max_capacity
-    % if current_charge < 35
+    if current_charge <35 Params.Max_capacity
         Total_Power = 180 - power_consumption; %[w] Power available to charge the batteries
     else
         Total_Power = current_charge/(dt/3600) - power_consumption; %[w] Power available to charge the batteries
