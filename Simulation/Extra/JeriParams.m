@@ -136,11 +136,11 @@ Params.mass  = 15.3;     % mass [kg]
 Params.CP_AL = 921.096;  % Aluminum heat capacity [J/kg*K]
 
 %% Attitude Control
-Params.Attitude_Angles0.Psi   = 1; % Initial attitude [rad]
-Params.Attitude_Angles0.Theta = 0.5; % Initial attitude [rad]
-Params.Attitude_Angles0.Phi   = 3; % Initial attitude [rad]
+Params.Attitude_Angles0.Psi   = 0.202; % Initial attitude [rad]
+Params.Attitude_Angles0.Theta = 1.972; % Initial attitude [rad]
+Params.Attitude_Angles0.Phi   =1.651; % Initial attitude [rad]
 
-Params.Attitude_rate0.P   = 0.1;   % Initial angular rate [rad/s]
+Params.Attitude_rate0.P   = 0;   % Initial angular rate [rad/s]
 Params.Attitude_rate0.Q   = 0;   % Initial angular rate [rad/s]
 Params.Attitude_rate0.R   = 0;   % Initial angular rate [rad/s]
 
