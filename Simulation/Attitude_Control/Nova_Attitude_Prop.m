@@ -1,4 +1,4 @@
-function [Next_Step_Angular,Params,Flags] = Nova_Attitude_PrParamsop(Current_Step_Angular,Params,Flags)
+function [Next_Step_Angular,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Params,Flags)
 % NovaSat Attitude SIMULATION
 % Originally by: May Alon (Jericco)
 % NovaSAT editors: Shai Peled & Edos Osazuwa
@@ -85,7 +85,7 @@ q_eul_t = flip(q_eul_t);
 
 
 %% Simulink
-OverrideSimulink = false;
+OverrideSimulink = true;
 if(OverrideSimulink)
     % Calculated target angular state [rad]
     Next_Step_Angular.Psi = eul_t(1);
@@ -98,11 +98,11 @@ if(OverrideSimulink)
     Params.Attitude_Control_Data = 0;
 else
     % Set conditions to simulink
-    Outsim = RunSimulink(q_eul_i,w_i,q_eul_t);
+    [~,Outsim] = RunSimulink(q_eul_i,w_i,q_eul_t);
 
     % Export data from simulation
     Data = Outsim.Data.signals.values(:,:,:);
-    Data = reshape(Data,[17 length(Data)]);
+    Data = reshape(Data,[26 length(Data)]);
     q_f = Data(1:4,end); % final quaternion
     w_f = Data(5:7,end); % [rad/sec] final angular velocity
     q_error = Data(8:11,end); % error quaternion
@@ -234,7 +234,7 @@ function [eul_t,w_t] = Night_Att_Logic(eul_i,w_max)
     w_t = [p_t;q_t;r_t];
 end
 
-function [Outsim]= RunSimulink(q_eul_i,w_i,q_t)
+function [Params,Outsim]= RunSimulink(q_eul_i,w_i,q_t)
     Params.q0 = q_eul_i;
     Params.w0 = w_i; % Angular Velocity [deg/sec]
     Params.w0_W = deg2rad([0;0;0;0]);
@@ -289,5 +289,6 @@ function [Outsim]= RunSimulink(q_eul_i,w_i,q_t)
     Params.H_lim = H_lim;
     Params.tf = 60;
     % Simulate - attitude control
+    assignin('base','Params',Params)
     Outsim = sim('Control_Sim_dev');
 end
