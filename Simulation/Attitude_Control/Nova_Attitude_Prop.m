@@ -42,6 +42,8 @@ LVLH_to_Body = rotx(phi_i)*rotz(psi_i)*roty(tet_i);
 SatPosition_ECI = Params.SatPosition';
 SunPosition_ECI = Params.SunPosition';
 CommsSatPosition_ECI = Params.CommsSatPosition'; 
+
+%Sat2Sun
 Sat2Sun_ECI = SatPosition_ECI - SunPosition_ECI;
 orbital_elements = table2array(Params.orbital_elements);
 inc = orbital_elements(3);
@@ -49,9 +51,9 @@ RAAN = orbital_elements(4);
 theta = orbital_elements(5) + orbital_elements(6);
 Sat2Sun_LVLH = eci2LVLH(Sat2Sun_ECI,RAAN,inc,theta);
 Sat2Sun_Body = LVLH_to_Body*Sat2Sun_LVLH;
-
+%Sat2Comms
 Sat2Comms_ECI = SatPosition_ECI - CommsSatPosition_ECI;
-Sat2Comms_LVLH = ECI2LVLH(Sat2Comms_ECI,RAAN,inc,theta);
+Sat2Comms_LVLH = eci2LVLH(Sat2Comms_ECI,RAAN,inc,theta);
 Sat2Comms_Body = LVLH_to_Body*Sat2Comms_LVLH;
 
 % Max angular rate [rad/sec]
@@ -67,7 +69,7 @@ elseif Flags.IsDay
 elseif ~Flags.IsDay
     % Night state - minimum energy, keep current angle\rates as long as
     % not exceeding max rate
-    [eul_t,w_t] = Night_Att_Logic(w_max);
+    [eul_t,w_t] = Night_Att_Logic(eul_i,w_max);
 end
 
 % Convert euler angles to quaternion
@@ -184,23 +186,9 @@ end
 
 function [eul_t,w_t] = Comms_Att_Logic(Sat2Comms_Body)
     %% Communication State Logic
-    % Z_B = [1;0;0]; %Z axis in body frame
-    % Sat2Comms_I = SatPosition_I - CommsSatPosition_I;
-    % Sat2Comms_B = I_to_B*Sat2Comms_I;
-    % uSat2Comms_B = Sat2Comms_B./norm(Sat2Comms_B); 
-    % psi_t = asin(Z_B(3)/uSat2Comms_B(2));
-    % tet_t = atan(uSat2Comms_B(2)/uSat2Comms_B(1)); 
-    % phi_t = 0;
-    % 
-    % psi_t = 0;
-    % tet_t = 0;
-    % phi_t = 0;
-    % 
-    % eul_t = [psi_t,tet_t,phi_t];
-
+    Z_B = [1;0;0]; %Z axis in body frame
     uSat2Comms_Body = Sat2Comms_Body./norm(Sat2Comms_Body); 
     eul_t = ang_between_vec(Z_B,uSat2Comms_Body);
-
 
     % Target angular rate [rad/sec]
     p_t = 0;
@@ -271,7 +259,7 @@ function [eul_t,w_t] = SunSearch_Att_Logic(Sun2Sun_B,Flags)
     w_t = [p_t;q_t;r_t];
 end
 
-function [eul_t,w_t] = Night_Att_Logic(w_max)
+function [eul_t,w_t] = Night_Att_Logic(eul_i,w_max)
     % Target angular rate [rad/sec]
     % w_max=1;
     % w_safty_factor=1;
@@ -281,10 +269,7 @@ function [eul_t,w_t] = Night_Att_Logic(w_max)
     % end
 
     % Target attitude in terms of euler angles [rad]
-    psi_t = 2;
-    tet_t = 2;
-    phi_t = 2;
-    eul_t = [psi_t,tet_t,phi_t];
+    eul_t = eul_i
     
     % Target angular rate [rad/sec]
     p_t = 2;
