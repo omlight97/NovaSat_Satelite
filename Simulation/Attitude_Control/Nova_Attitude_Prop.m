@@ -98,7 +98,7 @@ if(OverrideSimulink)
     Params.Attitude_Control_Data = 0;
 else
     % Set conditions to simulink
-    [~,Outsim] = RunSimulink(q_eul_i,w_i,q_eul_t);
+    Outsim = RunSimulink(q_eul_i,w_i,q_eul_t);
 
     % Export data from simulation
     Data = Outsim.Data.signals.values(:,:,:);
@@ -109,8 +109,8 @@ else
     w_error = Data(12:14,end);% [rad/sec] angular velocity error
     Tc = Data(15:17,end); % [Nm] Torque command
     % Convert quaternion to euler angles - ZYX sequnce
-    eul_f = quat2eul(flip(q_f(end))');
-    eul_error = quat2eul(flip(q_error(end))');
+    eul_f = quat2eul(flip(q_f)');
+    eul_error = quat2eul(flip(q_error)');
 
     % Calculated next angular state
     Next_Step_Angular.Psi = eul_f(1);
