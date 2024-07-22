@@ -1,0 +1,17 @@
+                                                                  22 Jul 2024 19:56:19
+Satellite-NOVASAT-16U:  Lighting
+
+
+Sunlight Times
+--------------
+                     Start Time (UTCG)           Stop Time (UTCG)       Duration (sec)
+                  -----------------------    -----------------------    --------------
+                  1 Jan 2026 10:00:00.000    1 Jan 2026 10:17:31.611          1051.611
+                  1 Jan 2026 10:52:13.219    1 Jan 2026 11:53:55.684          3702.465
+
+Statistics
+----------
+Min Duration      1 Jan 2026 10:00:00.000    1 Jan 2026 10:17:31.611          1051.611
+Max Duration      1 Jan 2026 10:52:13.219    1 Jan 2026 11:53:55.684          3702.465
+Mean Duration                                                                 2377.038
+Total Duration                                                                4754.076

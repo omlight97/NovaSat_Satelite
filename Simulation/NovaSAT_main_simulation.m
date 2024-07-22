@@ -34,13 +34,13 @@ addpath(genpath(pwd));
 % [DataBase2.SunTimes, DataBase2.SunPosition]     = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_SunPosition']);
 % [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition']);
 try
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
-    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra\NOVASAT_16U_MatlabReport_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra/NOVASAT_16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra/NOVASAT_16U_MatlabReport_EarthPosition']);
 catch
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport - SunPosition']);
     [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport - EarthPosition']);
 end
 
 e     = DataBase.SatProperties(:,9);
