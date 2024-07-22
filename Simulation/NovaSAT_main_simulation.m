@@ -8,10 +8,10 @@ clear all;
 
 tic
 file_names = dir;
-Flags.sun_search.initial_flag = 1;
-Flags.Can_Continue = 0;
-Flags.Mission_Now = 0;
-Flags.Comms_Now = 0;
+Flags2.sun_search.initial_flag = 1;
+Flags2.Can_Continue = 0;
+Flags2.Mission_Now = 0;
+Flags2.Comms_Now = 0;
 addpath(genpath(pwd));
 [g, h] = IGRF13;
 
@@ -33,10 +33,15 @@ addpath(genpath(pwd));
 
 % [DataBase2.SunTimes, DataBase2.SunPosition]     = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_SunPosition']);
 % [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition']);
-
-[DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_SunPosition']);
-[DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_FullSimulation']);
-[DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra\NOVASAT-16U_MatlabReport_-_EarthPosition']);
+try
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+catch
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+end
 
 e     = DataBase.SatProperties(:,9);
 i2    = DataBase.SatProperties(:,10);
@@ -60,7 +65,7 @@ if ~exist('Params')
     Params = [];
 end
 
-[Params, Flags] = JeriParams(Params,Flags);
+[Params, Flags2] = JeriParams(Params,Flags2);
 [Numeric_properties] = Define_Numeric_properties(DataBase.SunTimes);
 
 if isfield(Params,'Duration')
@@ -114,7 +119,7 @@ end
 % end
 % 
 t0 = 0;
-Flags.Skip = 0;
+% Flags.Skip = 0;
 
 if ~isfield(Params,'Attitude_Angles')
     Current_Step_Angular.Psi = Params.Attitude_Angles0.Psi;
@@ -151,11 +156,19 @@ psi_vec=zeros(size(DataBase.EarthTimes));
 Theta_vec=zeros(size(DataBase.EarthTimes));
 phi_vec=zeros(size(DataBase.EarthTimes));
 B_vec=zeros(3,length(phi_vec));
+GRB_Alert= Get_GRB_Alert(Time_vec);
+Flags.sun_search.initial_flag = 1;
 %%
 while  i <=  length(DataBase.SunTimes)
+    if GRB_Alert(i)
+        Flags.GRB=1;
+    else
+        Flags.GRB=0;
+    end
     alpha_G_0=10;
     n=6;
     Params.SunPosition=[DataBase.SunPosition.Var5(i),DataBase.SunPosition.Var6(i),DataBase.SunPosition.Var7(i)];
+    Params.CommsSatPosition = PositionCommTime(i,3:5);
     % External calculations (Alpha_angle, Date, Day or Night)
     if i==1
     SatPosition=[Current_Step_Orbit.r(1),Current_Step_Orbit.r(2),Current_Step_Orbit.r(3)];
@@ -180,6 +193,7 @@ while  i <=  length(DataBase.SunTimes)
     else
         Flags.Communication=0;
     end
+
     if strcmp(states.Logic,'operational')
         if Flags.Day
             states.day = 1;
@@ -286,15 +300,16 @@ while  i <=  length(DataBase.SunTimes)
         
         
         %% Attitude Control
-        [Next_Angular_State,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Flags, Params);
-        SimData.Angular_State(i,:) = Next_Angular_State;
+        Params.orbital_elements=[DataBase.SatProperties(i,8),DataBase.SatProperties(i,9),DataBase.SatProperties(i,10),DataBase.SatProperties(i,11),DataBase.SatProperties(i,12),DataBase.SatProperties(i,13)];
+        [Next_Step_Angular,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Params,Flags);
+        SimData.Angular_State(i,:) = Next_Step_Angular;
        % SimData.Wheels_Data(i,:) = Wheels_Data;
         %SimData.More_Data_Attitude_Control(i,:) = More_Data_Attitude_Control; %Name should be given!
     %end
-       psi_vec(i) = Next_Angular_State.Psi;
-       Theta_vec(i)=Next_Angular_State.Theta;
-       phi_vec(i)=Next_Angular_State.Phi;
-       Current_Step_Angular = Next_Angular_State;
+       psi_vec(i) = Next_Step_Angular.Psi;
+       Theta_vec(i)=Next_Step_Angular.Theta;
+       phi_vec(i)=Next_Step_Angular.Phi;
+       Current_Step_Angular = Next_Step_Angular;
        % 
        % Current_Step_Angular.Psi=Next_Angular_State.Psi;
        % Current_Step_Angular.angles(2)=i.Theta;
@@ -384,23 +399,64 @@ subplot(2,3,1);
 hold on;
 plot(Time_vec/60,psi_vec);
 xlabel('time [min]');
-ylabel('psi [deg]');
+ylabel('psi [rad]');
 title('psi vs time');
 grid on;
 subplot(2,3,2);
 hold on;
 plot(Time_vec/60,Theta_vec);
 xlabel('time [min]');
-ylabel('theta [deg]');
+ylabel('theta [rad]');
 title('theta vs time');
 grid on;
 subplot(2,3,3);
 hold on;
 plot(Time_vec/60,phi_vec);
 xlabel('time [min]');
-ylabel('phi [deg]');
+ylabel('phi [rad]');
 title('phi vs time');
 grid on;
+subplot(2,3,4);
+hold on;
+plot(Time_vec/60,DayOrNight_vec);
+xlabel('time [min]');
+ylabel('ISDay [rad]');
+title('DayOrNight vs time');
+grid on;
+subplot(2,3,5);
+hold on;
+plot(Time_vec/60,GRB_Alert);
+xlabel('time [min]');
+ylabel('GRB ');
+title('GRB vs time');
+grid on;
+
+imarasat1=zeros(1,length(Time_vec));
+imarasat2=zeros(1,length(Time_vec));
+imarasat3=zeros(1,length(Time_vec));
+
+for i=1:length(Time_vec)
+    if PositionCommTime(i,1)==1
+        imarasat1(i)=PositionCommTime(i,2);
+    end
+    if PositionCommTime(i,1)==2
+        imarasat2(i)=PositionCommTime(i,2);
+    end
+    if PositionCommTime(i,1)==3
+        imarasat3(i)=PositionCommTime(i,2);
+    end
+end
+
+subplot(2,3,6);
+hold all;
+scatter(Time_vec/60,imarasat1);
+scatter(Time_vec/60,imarasat2);
+scatter(Time_vec/60,imarasat3);
+xlabel('time [min]');
+ylabel('communicationtime[min] ');
+title('communication vs time');
+grid on;
+legend('inmarsat1','inmarsat2','inmarsat3');
 %%
 figure;
 subplot(1,3,1);
@@ -421,6 +477,6 @@ subplot(1,3,3);
 hold on;
 plot(Time_vec/60,SimData.Batteries_Electric_Charge');
 xlabel('time [min]');
-ylabel('Batteries Electric_Charge [W]');
-title('Batteries Electric_Charge vs time');
+ylabel('Batteries ElectricCharge [W]');
+title('Batteries ElectricCharge vs time');
 grid on;
