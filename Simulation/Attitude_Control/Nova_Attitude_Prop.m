@@ -269,7 +269,7 @@ function [eul_t,w_t] = Night_Att_Logic(eul_i,w_max)
     % end
 
     % Target attitude in terms of euler angles [rad]
-    eul_t = eul_i
+    eul_t = eul_i;
     
     % Target angular rate [rad/sec]
     p_t = 2;
