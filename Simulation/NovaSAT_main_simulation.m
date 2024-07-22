@@ -8,10 +8,10 @@ clear all;
 
 tic
 file_names = dir;
-Flags.sun_search.initial_flag = 1;
-Flags.Can_Continue = 0;
-Flags.Mission_Now = 0;
-Flags.Comms_Now = 0;
+Flags2.sun_search.initial_flag = 1;
+Flags2.Can_Continue = 0;
+Flags2.Mission_Now = 0;
+Flags2.Comms_Now = 0;
 addpath(genpath(pwd));
 [g, h] = IGRF13;
 
@@ -65,7 +65,7 @@ if ~exist('Params')
     Params = [];
 end
 
-[Params, Flags] = JeriParams(Params,Flags);
+[Params, Flags2] = JeriParams(Params,Flags2);
 [Numeric_properties] = Define_Numeric_properties(DataBase.SunTimes);
 
 if isfield(Params,'Duration')
@@ -119,7 +119,7 @@ end
 % end
 % 
 t0 = 0;
-Flags.Skip = 0;
+% Flags.Skip = 0;
 
 if ~isfield(Params,'Attitude_Angles')
     Current_Step_Angular.Psi = Params.Attitude_Angles0.Psi;
@@ -157,12 +157,13 @@ Theta_vec=zeros(size(DataBase.EarthTimes));
 phi_vec=zeros(size(DataBase.EarthTimes));
 B_vec=zeros(3,length(phi_vec));
 GRB_Alert= Get_GRB_Alert(Time_vec);
+Flags.sun_search.initial_flag = 1;
 %%
 while  i <=  length(DataBase.SunTimes)
     if GRB_Alert(i)
         Flags.GRB=1;
     else
-        Flags.GRB=1;
+        Flags.GRB=0;
     end
     alpha_G_0=10;
     n=6;
@@ -192,7 +193,6 @@ while  i <=  length(DataBase.SunTimes)
     else
         Flags.Communication=0;
     end
-            Flags.Communication=0;
 
     if strcmp(states.Logic,'operational')
         if Flags.Day
@@ -416,6 +416,47 @@ xlabel('time [min]');
 ylabel('phi [rad]');
 title('phi vs time');
 grid on;
+subplot(2,3,4);
+hold on;
+plot(Time_vec/60,DayOrNight_vec);
+xlabel('time [min]');
+ylabel('ISDay [rad]');
+title('DayOrNight vs time');
+grid on;
+subplot(2,3,5);
+hold on;
+plot(Time_vec/60,GRB_Alert);
+xlabel('time [min]');
+ylabel('GRB ');
+title('GRB vs time');
+grid on;
+
+imarasat1=zeros(1,length(Time_vec));
+imarasat2=zeros(1,length(Time_vec));
+imarasat3=zeros(1,length(Time_vec));
+
+for i=1:length(Time_vec)
+    if PositionCommTime(i,1)==1
+        imarasat1(i)=PositionCommTime(i,2);
+    end
+    if PositionCommTime(i,1)==2
+        imarasat2(i)=PositionCommTime(i,2);
+    end
+    if PositionCommTime(i,1)==3
+        imarasat3(i)=PositionCommTime(i,2);
+    end
+end
+
+subplot(2,3,6);
+hold all;
+scatter(Time_vec/60,imarasat1);
+scatter(Time_vec/60,imarasat2);
+scatter(Time_vec/60,imarasat3);
+xlabel('time [min]');
+ylabel('communicationtime[min] ');
+title('communication vs time');
+grid on;
+legend('inmarsat1','inmarsat2','inmarsat3');
 %%
 figure;
 subplot(1,3,1);
