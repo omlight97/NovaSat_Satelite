@@ -292,7 +292,7 @@ while  i <=  length(DataBase.SunTimes)
         
         
         %% Attitude Control
-        Params.orbital_elements=[DataBase.SatProperties(i,8),DataBase.SatProperties(i,9),DataBase.SatProperties(i,10),DataBase.SatProperties(i,11),DataBase.SatProperties(i,12),DataBase.SatProperties(i,13)];
+        Params.orbital_elements=
         [Next_Step_Angular,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Params,Flags);
         SimData.Angular_State(i,:) = Next_Step_Angular;
        % SimData.Wheels_Data(i,:) = Wheels_Data;
