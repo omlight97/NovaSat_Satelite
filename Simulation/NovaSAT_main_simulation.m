@@ -156,8 +156,14 @@ psi_vec=zeros(size(DataBase.EarthTimes));
 Theta_vec=zeros(size(DataBase.EarthTimes));
 phi_vec=zeros(size(DataBase.EarthTimes));
 B_vec=zeros(3,length(phi_vec));
+GRB_Alert= Get_GRB_Alert(Time_vec);
 %%
 while  i <=  length(DataBase.SunTimes)
+    if GRB_Alert(i)
+        Flags.GRB=1;
+    else
+        Flags.GRB=1;
+    end
     alpha_G_0=10;
     n=6;
     Params.SunPosition=[DataBase.SunPosition.Var5(i),DataBase.SunPosition.Var6(i),DataBase.SunPosition.Var7(i)];
@@ -186,6 +192,8 @@ while  i <=  length(DataBase.SunTimes)
     else
         Flags.Communication=0;
     end
+            Flags.Communication=0;
+
     if strcmp(states.Logic,'operational')
         if Flags.Day
             states.day = 1;

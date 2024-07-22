@@ -156,8 +156,11 @@ psi_vec=zeros(size(DataBase.EarthTimes));
 Theta_vec=zeros(size(DataBase.EarthTimes));
 phi_vec=zeros(size(DataBase.EarthTimes));
 B_vec=zeros(3,length(phi_vec));
+GRB_Alert= Get_GRB_Alert(duration);
 %%
 while  i <=  length(DataBase.SunTimes)
+    if GRB_Alert
+        Flags.Grb=1
     alpha_G_0=10;
     n=6;
     Params.SunPosition=[DataBase.SunPosition.Var5(i),DataBase.SunPosition.Var6(i),DataBase.SunPosition.Var7(i)];
@@ -292,7 +295,7 @@ while  i <=  length(DataBase.SunTimes)
         
         
         %% Attitude Control
-        Params.orbital_elements=
+        Params.orbital_elements=[DataBase.SatProperties(i,8),DataBase.SatProperties(i,9),DataBase.SatProperties(i,10),DataBase.SatProperties(i,11),DataBase.SatProperties(i,12),DataBase.SatProperties(i,13)];
         [Next_Step_Angular,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Params,Flags);
         SimData.Angular_State(i,:) = Next_Step_Angular;
        % SimData.Wheels_Data(i,:) = Wheels_Data;
@@ -391,21 +394,21 @@ subplot(2,3,1);
 hold on;
 plot(Time_vec/60,psi_vec);
 xlabel('time [min]');
-ylabel('psi [deg]');
+ylabel('psi [rad]');
 title('psi vs time');
 grid on;
 subplot(2,3,2);
 hold on;
 plot(Time_vec/60,Theta_vec);
 xlabel('time [min]');
-ylabel('theta [deg]');
+ylabel('theta [rad]');
 title('theta vs time');
 grid on;
 subplot(2,3,3);
 hold on;
 plot(Time_vec/60,phi_vec);
 xlabel('time [min]');
-ylabel('phi [deg]');
+ylabel('phi [rad]');
 title('phi vs time');
 grid on;
 %%
@@ -428,6 +431,6 @@ subplot(1,3,3);
 hold on;
 plot(Time_vec/60,SimData.Batteries_Electric_Charge');
 xlabel('time [min]');
-ylabel('Batteries Electric_Charge [W]');
-title('Batteries Electric_Charge vs time');
+ylabel('Batteries ElectricCharge [W]');
+title('Batteries ElectricCharge vs time');
 grid on;
