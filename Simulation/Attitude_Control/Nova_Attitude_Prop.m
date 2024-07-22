@@ -66,10 +66,10 @@ if Flags.GRB
     [eul_t,w_t] = GRB_Att_Logic(eul_i,w_i);
 elseif Flags.Communication
     % Communication State Logic - attitude towards: Immar Satellites
-    [eul_t,w_t] = Comms_Att_Logic(Sat2Comms_Body);
+    [eul_t,w_t] = Comms_Att_Logic(Sat2Comms_LVLH);
 elseif Flags.IsDay
     % Sun Search State Logic - attitude towards: Sun
-    [eul_t,w_t] = SunSearch_Att_Logic(Sat2Sun_Body,Flags);
+    [eul_t,w_t] = SunSearch_Att_Logic(Sat2Sun_LVLH,Flags);
 elseif ~Flags.IsDay
     % Night state - minimum energy, keep current angle\rates as long as
     % not exceeding max rate
@@ -192,11 +192,11 @@ function [eul_t,w_t] = GRB_Att_Logic(eul_i,w_i)
     w_t = w_i;
 end
 
-function [eul_t,w_t] = Comms_Att_Logic(Sat2Comms_Body)
+function [eul_t,w_t] = Comms_Att_Logic(Sat2Comms_LVLH)
     %% Communication State Logic
-    Z_B = [1;0;0]; %Z axis in body frame
-    uSat2Comms_Body = Sat2Comms_Body./norm(Sat2Comms_Body); 
-    eul_t = ang_between_vec(Z_B,uSat2Comms_Body);
+    Z_LVLH = [0;0;1]; %Z axis in LVLH frame
+    uSat2Comms_Body = Sat2Comms_LVLH./norm(Sat2Comms_LVLH); 
+    eul_t = ang_between_vec(Z_LVLH,uSat2Comms_Body);
 
     % Target angular rate [rad/sec]
     p_t = 0;
@@ -205,19 +205,19 @@ function [eul_t,w_t] = Comms_Att_Logic(Sat2Comms_Body)
     w_t = [p_t;q_t;r_t];
 end
 
-function [eul_t,w_t] = SunSearch_Att_Logic(Sun2Sun_B,Flags)
+function [eul_t,w_t] = SunSearch_Att_Logic(Sun2Sun_LVLH,Flags)
     %% Sun Search State Logic
-    Z_B = [1;0;0]; %Z axis in body frame
+    Z_LVLH = [0;0;1]; %Z axis in LVLH frame
     SunSensorFOV = deg2rad(120); %Sun sensor field of view
     SunSensorPositionVector_B = [0;1;0]; %Sun sensor Heading - assuming pointing side at the moment
 
-    uSat2Sun_B = Sun2Sun_B./norm(Sun2Sun_B); % Satellite center to the center of the Sun (unit vector). - body frame
+    uSat2Sun_B = Sun2Sun_LVLH./norm(Sun2Sun_LVLH); % Satellite center to the center of the Sun (unit vector). - body frame
     isLOS2Sun = dot(SunSensorPositionVector_B, uSat2Sun_B) > cos(SunSensorFOV);
 
     isLOS2Sun = true; %% temp - until logic is completed and verifyied
 
     if(isLOS2Sun) % is sun in field of view
-        eul_t = ang_between_vec(Z_B,uSat2Sun_B);
+        eul_t = ang_between_vec(Z_LVLH,uSat2Sun_B);
         % psi_t = asin(SunSensorPositionVector_B(3)/uSat2Sun_B(2));
         % tet_t = atan(uSat2Sun_B(2)/uSat2Sun_B(1)); 
         % phi_t = 0;
