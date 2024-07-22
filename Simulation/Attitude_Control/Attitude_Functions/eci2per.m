@@ -1,0 +1,6 @@
+function [peri_vec] = eci2per(eci_vec,RAAN,i,w)
+peri2eci = [-sin(RAAN)*cos(i)*sin(w)+cos(RAAN)*cos(w),-sin(RAAN)*cos(i)*cos(w)-cos(RAAN)*sin(w),sin(i)*sin(RAAN);...
+            cos(RAAN)*cos(i)*sin(w) + sin(RAAN)*cos(w) , cos(RAAN)*cos(i)*cos(w) - sin(RAAN)*sin(w), -sin(i)*cos(RAAN);...
+            sin(w)*sin(i), cos(w)*sin(i), cos(i)];
+
+peri_vec = peri2eci'*eci_vec;
