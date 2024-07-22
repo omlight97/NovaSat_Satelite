@@ -1,4 +1,4 @@
-function [Next_Step_Angular,SimParams,Flags] = Nova_Attitude_Prop(Current_Step_Angular,SimParams,Flags)
+function [Next_Step_Angular,Params,Flags] = Nova_Attitude_PrParamsop(Current_Step_Angular,Params,Flags)
 % NovaSat Attitude SIMULATION
 % Originally by: May Alon (Jericco)
 % NovaSAT editors: Shai Peled & Edos Osazuwa
@@ -43,13 +43,13 @@ LVLH_to_Body = rotx(phi_i)*roty(tet_i)*rotz(psi_i);
 % Magnetic_Torque_B = Magnetic_field_function(I_to_B,Params.Magnetic_Field_I,Params.Magnetic_Dipol_B);
 
 % Current Satellite\Sun\ImmarSat position
-SatPosition_ECI = SimParams.SatPosition';
-SunPosition_ECI = SimParams.SunPosition';
-CommsSatPosition_ECI = SimParams.CommsSatPosition'; 
+SatPosition_ECI = Params.SatPosition';
+SunPosition_ECI = Params.SunPosition';
+CommsSatPosition_ECI = Params.CommsSatPosition'; 
 
 %Sat2Sun
 Sat2Sun_ECI = SatPosition_ECI - SunPosition_ECI;
-orbital_elements = table2array(SimParams.orbital_elements);
+orbital_elements = table2array(Params.orbital_elements);
 inc = deg2rad(orbital_elements(3));
 RAAN = deg2rad(orbital_elements(4));
 theta = deg2rad(orbital_elements(5) + orbital_elements(6));
@@ -61,7 +61,7 @@ Sat2Comms_LVLH = eci2LVLH(Sat2Comms_ECI,RAAN,inc,theta);
 Sat2Comms_Body = LVLH_to_Body*Sat2Comms_LVLH;
 
 % Max angular rate [rad/sec]
-w_max = [SimParams.p_max;SimParams.q_max;SimParams.r_max];
+w_max = [Params.p_max;Params.q_max;Params.r_max];
 
 %% Attitude logic
 if Flags.GRB
@@ -95,12 +95,11 @@ if(OverrideSimulink)
     Next_Step_Angular.P = w_t(1);
     Next_Step_Angular.Q = w_t(2);
     Next_Step_Angular.R = w_t(3);
-    SimParams.Attitude_Control_Data = 0;
+    Params.Attitude_Control_Data = 0;
 else
     % Set conditions to simulink
-    Params = SetSimulinkConditions(q_eul_i,w_i,q_eul_t);
-    % Simulate - attitude control
-    Outsim = sim('Control_Sim');
+    Outsim = RunSimulink(q_eul_i,w_i,q_eul_t);
+
     % Export data from simulation
     Data = Outsim.Data.signals.values(:,:,:);
     Data = reshape(Data,[17 length(Data)]);
@@ -110,8 +109,8 @@ else
     w_error = Data(12:14,end);% [rad/sec] angular velocity error
     Tc = Data(15:17,end); % [Nm] Torque command
     % Convert quaternion to euler angles - ZYX sequnce
-    eul_f = quat2eul(flip(q_f)');
-    eul_error = quat2eul(flip(q_error)');
+    eul_f = quat2eul(flip(q_f(end))');
+    eul_error = quat2eul(flip(q_error(end))');
 
     % Calculated next angular state
     Next_Step_Angular.Psi = eul_f(1);
@@ -122,17 +121,17 @@ else
     Next_Step_Angular.Q = w_f(2);
     Next_Step_Angular.R = w_f(3);
 
-    SimParams.Attitude_Control_Data.Psi_error = eul_error(1);
-    SimParams.Attitude_Control_Data.Theta_error = eul_error(2);
-    SimParams.Attitude_Control_Data.Phi_error = eul_error(3);
+    Params.Attitude_Control_Data.Psi_error = eul_error(1);
+    Params.Attitude_Control_Data.Theta_error = eul_error(2);
+    Params.Attitude_Control_Data.Phi_error = eul_error(3);
 
-    SimParams.Attitude_Control_Data.P_error = w_error(1);
-    SimParams.Attitude_Control_Data.Q_error = w_error(2);
-    SimParams.Attitude_Control_Data.R_error = w_error(3);
+    Params.Attitude_Control_Data.P_error = w_error(1);
+    Params.Attitude_Control_Data.Q_error = w_error(2);
+    Params.Attitude_Control_Data.R_error = w_error(3);
 
-    SimParams.Attitude_Control_Data.Lc = Tc(1);
-    SimParams.Attitude_Control_Data.Mc = Tc(2);
-    SimParams.Attitude_Control_Data.Nc = Tc(3);
+    Params.Attitude_Control_Data.Lc = Tc(1);
+    Params.Attitude_Control_Data.Mc = Tc(2);
+    Params.Attitude_Control_Data.Nc = Tc(3);
 end
 end
 
@@ -235,7 +234,7 @@ function [eul_t,w_t] = Night_Att_Logic(eul_i,w_max)
     w_t = [p_t;q_t;r_t];
 end
 
-function Params = SetSimulinkConditions(q_eul_i,w_i,q_t)
+function [Outsim]= RunSimulink(q_eul_i,w_i,q_t)
     Params.q0 = q_eul_i;
     Params.w0 = w_i; % Angular Velocity [deg/sec]
     Params.w0_W = deg2rad([0;0;0;0]);
@@ -288,4 +287,7 @@ function Params = SetSimulinkConditions(q_eul_i,w_i,q_t)
     H_lim = 0.0015;%0.03; % Angular momentum limit [Nms] 
     T_lim = 2e-3; % Torque limit [Nm]
     Params.H_lim = H_lim;
+    Params.tf = 60;
+    % Simulate - attitude control
+    Outsim = sim('Control_Sim_dev');
 end

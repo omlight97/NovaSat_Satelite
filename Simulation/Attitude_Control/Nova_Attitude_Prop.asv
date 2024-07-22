@@ -11,8 +11,9 @@ psi_i   = Current_Step_Angular.Psi;
 tet_i = Current_Step_Angular.Theta;
 phi_i   = Current_Step_Angular.Phi;
 eul_i = [psi_i,tet_i,phi_i];
-
-
+% Convert euler angles to quaternion
+q_eul_i = eul2quat(eul_i);
+q_eul_i = flip(q_eul_i);
 
 % Current angular rate [rad/sec]
 p_i = Current_Step_Angular.P;
@@ -99,7 +100,7 @@ else
     % Set conditions to simulink
     Params = SetSimulinkConditions(q_eul_i,w_i,q_eul_t);
     % Simulate - attitude control
-    Outsim = sim('Control_Sim');
+    Outsim = sim('Control_Sim_dev');
     % Export data from simulation
     Data = Outsim.Data.signals.values(:,:,:);
     Data = reshape(Data,[17 length(Data)]);
@@ -109,8 +110,8 @@ else
     w_error = Data(12:14,end);% [rad/sec] angular velocity error
     Tc = Data(15:17,end); % [Nm] Torque command
     % Convert quaternion to euler angles - ZYX sequnce
-    eul_f = quat2eul(flip(q_f)');
-    eul_error = quat2eul(flip(q_error)');
+    eul_f = quat2eul(flip(q_f(end))');
+    eul_error = quat2eul(flip(q_error(end))');
 
     % Calculated next angular state
     Next_Step_Angular.Psi = eul_f(1);
@@ -287,4 +288,5 @@ function Params = SetSimulinkConditions(q_eul_i,w_i,q_t)
     H_lim = 0.0015;%0.03; % Angular momentum limit [Nms] 
     T_lim = 2e-3; % Torque limit [Nm]
     Params.H_lim = H_lim;
+    Params.tf = 60;
 end
