@@ -39,6 +39,7 @@ Magneto_External_Torque = [0;0;0];
 Params.External_Torque  = SolarRadiation_External_Torque + Drag_External_Torque + Magneto_External_Torque;
 
 %% Pararmeters
+%Update to 16U!
 % Inertia matrix [kg*m^2]
 I_conv = 1/10^9;
 Ixx = 136536680.23*I_conv;

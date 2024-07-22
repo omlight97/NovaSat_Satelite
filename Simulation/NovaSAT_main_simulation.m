@@ -292,7 +292,7 @@ while  i <=  length(DataBase.SunTimes)
         
         
         %% Attitude Control
-        [Next_Step_Angular,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Params,Flags);
+        [Next_Step_Angular,Params,Flags] = Nova_Attitude_Prop_new(Current_Step_Angular,Params,Flags);
         SimData.Angular_State(i,:) = Next_Step_Angular;
        % SimData.Wheels_Data(i,:) = Wheels_Data;
         %SimData.More_Data_Attitude_Control(i,:) = More_Data_Attitude_Control; %Name should be given!
