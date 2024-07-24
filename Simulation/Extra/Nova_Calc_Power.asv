@@ -75,7 +75,7 @@ power_consumption = Mode_data(:,'Total_Power').Variables;
 
 if Flags.IsDay
     Power_Production = Params.vertical_power_produc*abs(cos(theta_angle));
-    Total_Power = Power_Production - power_consumption; %[w] Power available to charge the batteries
+    Total_Power = Power_Production - power_consumption/60; %[w] Power available to charge the batteries
 
     current_charge_next = Total_Power*dt/3600;
 
@@ -91,7 +91,9 @@ else
     % if current_charge < 35
         Total_Power = 180 - power_consumption; %[w] Power available to charge the batteries
     else
-        Total_Power =current_charge/(dt/3600) - power_consumption; %[w] Power available to charge the batteries
+         % Total_Power =current_charge/(dt/3600) - power_consumption; %[w] Power available to charge the batteries
+         Total_Power =current_charge - power_consumption/60; %[w] Power available to charge the batteries
+
     end
 
     current_charge_next = Total_Power*dt/3600;
@@ -106,4 +108,39 @@ end
 
 Power.Total_Power = Total_Power;
 Power.Production  = Power_Production;
+end
+
+%%
+numSteps=length(SimData.Angular_State.Psi;
+figure
+axis equal;
+xlim([-1 1]);
+ylim([-1 1]);
+zlim([-1 1]);
+xlabel('X');
+ylabel('Y');
+zlabel('Z');
+hold on;
+
+% Initialize quiver objects for the principal axes
+hX = quiver3(0, 0, 0, 1, 0, 0, 'r', 'LineWidth', 2);
+hY = quiver3(0, 0, 0, 0, 1, 0, 'g', 'LineWidth', 2);
+hZ = quiver3(0, 0, 0, 0, 0, 1, 'b', 'LineWidth', 2);
+
+% Loop to update the plot
+for k = 1:numSteps
+    % Compute the rotation matrix from Euler angles
+    
+    
+    % Principal axes in the rotated frame
+    xAxis = SimData.Angular_State.Psi(:);
+    yAxis = SimData.Angular_State.Theta(:);
+    zAxis = SimData.Angular_State.Phi(:);
+    
+    % Update the quiver objects
+    set(hX, 'UData', xAxis(1), 'VData', xAxis(2), 'WData', xAxis(3));
+    set(hY, 'UData', yAxis(1), 'VData', yAxis(2), 'WData', yAxis(3));
+    set(hZ, 'UData', zAxis(1), 'VData', zAxis(2), 'WData', zAxis(3));
+    
+    drawnow;
 end

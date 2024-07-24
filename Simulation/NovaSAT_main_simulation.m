@@ -506,3 +506,36 @@ xlabel('time [min]');
 ylabel('%');
 title('DOD vs time');
 grid on;
+%%
+figure()
+axis equal;
+xlim([-1 1]);
+ylim([-1 1]);
+zlim([-1 1]);
+xlabel('X');
+ylabel('Y');
+zlabel('Z');
+hold on;
+
+% Initialize quiver objects for the principal axes
+hX = quiver3(0, 0, 0, 1, 0, 0, 'r', 'LineWidth', 2);
+hY = quiver3(0, 0, 0, 0, 1, 0, 'g', 'LineWidth', 2);
+hZ = quiver3(0, 0, 0, 0, 0, 1, 'b', 'LineWidth', 2);
+
+% Loop to update the plot
+for k = 1:length(Theta_vec)
+    % Compute the rotation matrix from Euler angles
+   R = eul2rotm([psi_vec(k) Theta_vec(k) phi_vec(k)], 'ZYX');
+    
+    % Principal axes in the rotated frame
+    xAxis = R(:, 1);
+    yAxis = R(:, 2);
+    zAxis = R(:, 3);
+    % Update the quiver objects
+    set(hX, 'UData', xAxis(1), 'VData', xAxis(2), 'WData', xAxis(3));
+    set(hY, 'UData', yAxis(1), 'VData', yAxis(2), 'WData', yAxis(3));
+    set(hZ, 'UData', zAxis(1), 'VData', zAxis(2), 'WData', zAxis(3));
+    
+    drawnow;
+
+end
