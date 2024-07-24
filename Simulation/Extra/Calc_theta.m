@@ -32,5 +32,5 @@ sat2sun = r_sun-r;  %ECI
 sat2sun_Body = ECI2Body(sat2sun,phi,psi,theta); %Body
 
 Theta_angle = atan2(sat2sun_Body(2),sat2sun_Body(1)); %[rad]
-Theta_angle=0;
+% Theta_angle=0;
 end

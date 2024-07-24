@@ -91,7 +91,9 @@ else
     % if current_charge < 35
         Total_Power = 180 - power_consumption; %[w] Power available to charge the batteries
     else
-        Total_Power = current_charge/(dt/3600) - power_consumption; %[w] Power available to charge the batteries
+         Total_Power =current_charge/(dt/3600) - power_consumption; %[w] Power available to charge the batteries
+         Total_Power =current_charge - power_consumption/60; %[w] Power available to charge the batteries
+
     end
 
     current_charge_next = Total_Power*dt/3600;

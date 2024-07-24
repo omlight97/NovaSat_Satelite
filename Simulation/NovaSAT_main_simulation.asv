@@ -239,7 +239,8 @@ while  i <=  length(DataBase.SunTimes)
     SimData.Power.Total_Power(i,:) = Power.Total_Power;
 
     current_charge = next_charge;
-% 
+
+    DOD_vec(i) = DOD;
 % %     %% Thermal
 % %     if ~mod(time_vec(i),Numeric_properties.dt_for_thermal)
 % % %         Thermal = Jeri_Calc_Thermal(World_Model, Current_Step_Angular, Current_Step_Orbit, Power, Flags, dt, Params, Thermal);
@@ -379,7 +380,7 @@ disp('Simulation has completed')
 %% plot
 
 figure()
-subplot(2,3,1);
+subplot(3,1,1);
 % sgtitle(['Orbit For a=', num2str(a(1)), ' [km], i=', num2str(i(1)), '[deg]'])
 a=table2array(a);
 e=table2array(e);
@@ -391,49 +392,51 @@ title('r(t)');
 grid on;
 %ylim([min(a)-6400 max(a)-6340])
 
-subplot(2,3,2);
+subplot(3,1,2);
 plot(Time_vec/60,e);
 xlabel('time [min]');
 ylabel('e'); ylim([-0.02,0.05]);
 title('e(t)');
 grid on;
 
-subplot(2,3,3);
+subplot(3,1,3);
 plot(Time_vec/60,i2);
 xlabel('time [min]');
 ylabel('i [deg]');
 title('i(t)');
 grid on;
 figure;
-subplot(2,3,1);
+subplot(3,1,1);
 hold on;
 plot(Time_vec/60,psi_vec);
 xlabel('time [min]');
 ylabel('psi [rad]');
 title('psi vs time');
 grid on;
-subplot(2,3,2);
+subplot(3,1,2);
 hold on;
 plot(Time_vec/60,Theta_vec);
 xlabel('time [min]');
 ylabel('theta [rad]');
 title('theta vs time');
 grid on;
-subplot(2,3,3);
+subplot(3,1,3);
 hold on;
 plot(Time_vec/60,phi_vec);
 xlabel('time [min]');
 ylabel('phi [rad]');
 title('phi vs time');
 grid on;
-subplot(2,3,4);
+%%
+figure()
+subplot(3,1,1);
 hold on;
 plot(Time_vec/60,DayOrNight_vec);
 xlabel('time [min]');
 ylabel('ISDay [rad]');
 title('DayOrNight vs time');
 grid on;
-subplot(2,3,5);
+subplot(3,1,2);
 hold on;
 plot(Time_vec/60,GRB_Alert);
 xlabel('time [min]');
@@ -444,20 +447,20 @@ grid on;
 imarasat1=zeros(1,length(Time_vec));
 imarasat2=zeros(1,length(Time_vec));
 imarasat3=zeros(1,length(Time_vec));
-
+%%
 for i=1:length(Time_vec)
-    if PositionCommTime(i,1)==1
+    if PositionCommTime(i,1)==1 && PositionCommTime(i,2)>2
         imarasat1(i)=PositionCommTime(i,2);
     end
-    if PositionCommTime(i,1)==2
+    if PositionCommTime(i,1)==2 && PositionCommTime(i,2)>2
         imarasat2(i)=PositionCommTime(i,2);
     end
-    if PositionCommTime(i,1)==3
+    if PositionCommTime(i,1)==3 && PositionCommTime(i,2)>2
         imarasat3(i)=PositionCommTime(i,2);
     end
 end
 
-subplot(2,3,6);
+subplot(3,1,3);
 hold all;
 scatter(Time_vec/60,imarasat1);
 scatter(Time_vec/60,imarasat2);
@@ -469,7 +472,7 @@ grid on;
 legend('inmarsat1','inmarsat2','inmarsat3');
 %%
 figure;
-subplot(1,4,1);
+subplot(4,1,1);
 hold on;
 plot(Time_vec/60,SimData.Power.Total_Power');
 xlabel('time [min]');
@@ -477,17 +480,24 @@ ylabel('Total Power [w]');
 title('Total Power vs time');
 grid on;
 % ylim([0 200]);
-subplot(1,3,2);
+subplot(4,1,2);
 hold on;
 plot(Time_vec/60,SimData.Power.Production');
 xlabel('time [min]');
 ylabel('Production [w]');
 title('Production vs time');
 grid on;
-subplot(1,3,3);
+subplot(4,1,3);
 hold on;
 plot(Time_vec/60,SimData.Batteries_Electric_Charge');
 xlabel('time [min]');
 ylabel('Batteries ElectricCharge [W]');
 title('Batteries ElectricCharge vs time');
+grid on;
+subplot(4,1,4)
+hold on;
+plot(Time_vec/60,DOD_vec);
+xlabel('time [min]');
+ylabel('%');
+title('DOD vs time');
 grid on;
