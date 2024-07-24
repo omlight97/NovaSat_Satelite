@@ -75,7 +75,7 @@ power_consumption = Mode_data(:,'Total_Power').Variables;
 
 if Flags.IsDay
     Power_Production = Params.vertical_power_produc*abs(cos(theta_angle));
-    Total_Power = Power_Production - power_consumption; %[w] Power available to charge the batteries
+    Total_Power = Power_Production - power_consumption/60; %[w] Power available to charge the batteries
 
     current_charge_next = Total_Power*dt/3600;
 
@@ -91,7 +91,7 @@ else
     % if current_charge < 35
         Total_Power = 180 - power_consumption; %[w] Power available to charge the batteries
     else
-         Total_Power =current_charge/(dt/3600) - power_consumption; %[w] Power available to charge the batteries
+         % Total_Power =current_charge/(dt/3600) - power_consumption; %[w] Power available to charge the batteries
          Total_Power =current_charge - power_consumption/60; %[w] Power available to charge the batteries
 
     end

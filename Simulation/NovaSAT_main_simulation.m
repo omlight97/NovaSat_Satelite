@@ -241,6 +241,10 @@ while  i <=  length(DataBase.SunTimes)
     current_charge = next_charge;
 
     DOD_vec(i) = DOD;
+    if Power.Total_Power<70
+                Flags.Communication=0;
+    end
+
 % %     %% Thermal
 % %     if ~mod(time_vec(i),Numeric_properties.dt_for_thermal)
 % % %         Thermal = Jeri_Calc_Thermal(World_Model, Current_Step_Angular, Current_Step_Orbit, Power, Flags, dt, Params, Thermal);
@@ -462,9 +466,9 @@ end
 
 subplot(3,1,3);
 hold all;
-scatter(Time_vec/60,imarasat1);
-scatter(Time_vec/60,imarasat2);
-scatter(Time_vec/60,imarasat3);
+bar(Time_vec/60,imarasat1);
+bar(Time_vec/60,imarasat2);
+bar(Time_vec/60,imarasat3);
 xlabel('time [min]');
 ylabel('communicationtime[min] ');
 title('communication vs time');

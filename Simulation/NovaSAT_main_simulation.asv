@@ -241,6 +241,7 @@ while  i <=  length(DataBase.SunTimes)
     current_charge = next_charge;
 
     DOD_vec(i) = DOD;
+    if Power
 % %     %% Thermal
 % %     if ~mod(time_vec(i),Numeric_properties.dt_for_thermal)
 % % %         Thermal = Jeri_Calc_Thermal(World_Model, Current_Step_Angular, Current_Step_Orbit, Power, Flags, dt, Params, Thermal);
@@ -447,7 +448,7 @@ grid on;
 imarasat1=zeros(1,length(Time_vec));
 imarasat2=zeros(1,length(Time_vec));
 imarasat3=zeros(1,length(Time_vec));
-%%
+
 for i=1:length(Time_vec)
     if PositionCommTime(i,1)==1 && PositionCommTime(i,2)>2
         imarasat1(i)=PositionCommTime(i,2);
@@ -470,6 +471,7 @@ ylabel('communicationtime[min] ');
 title('communication vs time');
 grid on;
 legend('inmarsat1','inmarsat2','inmarsat3');
+ylim([1 40]);
 %%
 figure;
 subplot(4,1,1);
