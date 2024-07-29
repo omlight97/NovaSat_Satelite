@@ -53,12 +53,14 @@ beta=DataBase.SatProperties(:,3);
 Time_vec=DataBase.SatTimes;
 %%
 % Gets vector of Communication time for 3 Satellites(0-No Comm, 1-Comm)
+
 AccessInmarsatVec = GetAccess(Time_vec,'Inmarsat');
 AccessTechnion = GetAccess(Time_vec,'GS');
 AccessSumTime = GetSumAccess(AccessInmarsatVec);
 DayOrNight_vec = GetAccess(Time_vec,'Sun');
 InmarsatPostion=table2array(DataBase.SatProperties(:,22:30));
 PositionCommTime=Get_position_SumAccess(AccessSumTime,InmarsatPostion);
+
 %%
 % Creates 'Params'
 if ~exist('Params')

@@ -24,7 +24,7 @@ for k=1:length(Name_vec)
         Month_vec(k) =10;
     elseif Name_vec(k) == 'Nov'
         Month_vec(k) =11;
-    else Name_vec(k) == 'Dec'
+    elseif Name_vec(k) == 'Dec'
         Month_vec(k) =12;
     end
 end
