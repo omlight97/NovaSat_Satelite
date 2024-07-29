@@ -34,9 +34,9 @@ addpath(genpath(pwd));
 % [DataBase2.SunTimes, DataBase2.SunPosition]     = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_SunPosition']);
 % [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition']);
 try
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\NOVASAT_16U_MatlabReport_SunPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra\NOVASAT_16U_MatlabReport_SunPosition']);
     [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra/NOVASAT_16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_EarthPosition']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra/NOVASAT_16U_MatlabReport_EarthPosition']);
 catch
     [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport - SunPosition']);
     [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_FullSimulation']);
@@ -304,12 +304,18 @@ while  i <=  length(DataBase.SunTimes)
         Params.orbital_elements=[DataBase.SatProperties(i,8),DataBase.SatProperties(i,9),DataBase.SatProperties(i,10),DataBase.SatProperties(i,11),DataBase.SatProperties(i,12),DataBase.SatProperties(i,13)];
         [Next_Step_Angular,Params,Flags] = Nova_Attitude_Prop(Current_Step_Angular,Params,Flags);
         SimData.Angular_State(i,:) = Next_Step_Angular;
+        SimData.attitude_extra_data(i,:) = {Params.Attitude_Control_Data};
        % SimData.Wheels_Data(i,:) = Wheels_Data;
         %SimData.More_Data_Attitude_Control(i,:) = More_Data_Attitude_Control; %Name should be given!
     %end
+       comm_vec(i) = Flags.Communication;
+
        psi_vec(i) = Next_Step_Angular.Psi;
        Theta_vec(i)=Next_Step_Angular.Theta;
        phi_vec(i)=Next_Step_Angular.Phi;
+       P_data(i)=Next_Step_Angular.P;
+       Q_data(i)=Next_Step_Angular.Q;
+       R_data(i)=Next_Step_Angular.R;
        Current_Step_Angular = Next_Step_Angular;
        %   psi_vec(i) = 0;
        % Theta_vec(i)=0;
@@ -499,3 +505,193 @@ xlabel('time [min]');
 ylabel('%');
 title('DOD vs time');
 grid on;
+
+extra_attitude_field = fields(SimData.attitude_extra_data{1});
+for i = 1:length(extra_attitude_field)
+    eval([extra_attitude_field{i} '= zeros(1,length(SimData.attitude_extra_data))']);
+    x = zeros(1,length(SimData.attitude_extra_data));
+    for j = 1:length(SimData.attitude_extra_data)
+        eval([x(j) '= [SimData.attitude_extra_data{j}.(extra_attitude_field{i})]'])
+    end
+end
+% Psi_error = zeros(1,length(SimData.attitude_extra_data));
+% Theta_error = zeros(1,length(SimData.attitude_extra_data));
+% Phi_error = zeros(1,length(SimData.attitude_extra_data));
+% P_error = zeros(1,length(SimData.attitude_extra_data));
+% Q_error = zeros(1,length(SimData.attitude_extra_data));
+% R_error = zeros(1,length(SimData.attitude_extra_data));
+% Lc = zeros(1,length(SimData.attitude_extra_data));
+% Mc = zeros(1,length(SimData.attitude_extra_data));
+% % Nc = zeros(1,length(SimData.attitude_extra_data));
+for j = 1:length(SimData.attitude_extra_data)
+    Psi_error(j) = SimData.attitude_extra_data{j}.Psi_error;
+    Theta_error(j) = SimData.attitude_extra_data{j}.Theta_error;
+    Phi_error(j) = SimData.attitude_extra_data{j}.Phi_error;
+    P_error(j) = SimData.attitude_extra_data{j}.P_error;
+    Q_error(j) = SimData.attitude_extra_data{j}.Q_error;
+    R_error(j) = SimData.attitude_extra_data{j}.R_error;
+    Lc(j) = SimData.attitude_extra_data{j}.Lc;
+    Mc(j) = SimData.attitude_extra_data{j}.Mc;
+    Nc(j) = SimData.attitude_extra_data{j}.Nc;
+
+    TW1(j) = SimData.attitude_extra_data{j}.TW1;
+    TW2(j) = SimData.attitude_extra_data{j}.TW2;
+    TW3(j) = SimData.attitude_extra_data{j}.TW3;
+    TW4(j) = SimData.attitude_extra_data{j}.TW4;
+    HW1(j) = SimData.attitude_extra_data{j}.HW1;
+    HW2(j) = SimData.attitude_extra_data{j}.HW2;
+    HW3(j) = SimData.attitude_extra_data{j}.HW3;
+    HW4(j) = SimData.attitude_extra_data{j}.HW4;
+end
+
+figure
+subplot(4,2,1)
+    plot(SimData.Time_vec/60 ,TW1)
+    title('Reaction wheel 1 torque')
+    xlabel('time[sec]')
+    ylabel('Torque[Nm]')
+    grid on
+subplot(4,2,3)
+    plot(SimData.Time_vec/60 ,TW2)
+
+    title('Reaction wheel 2 torque')
+    xlabel('time[sec]')
+    ylabel('Torque[Nm]')
+    grid on
+subplot(4,2,5)
+    plot(SimData.Time_vec/60 ,TW3)
+
+    title('Reaction wheel 3 torque')
+    xlabel('time[sec]')
+    ylabel('Torque[Nm]')
+    grid on
+subplot(4,2,7)
+    plot(SimData.Time_vec/60 ,TW4)
+
+    title('Reaction wheel 4 torque')
+    xlabel('time[sec]')
+    ylabel('Torque[Nm]')
+    grid on
+subplot(4,2,2)
+    plot(SimData.Time_vec/60 ,HW1)
+    title('Reaction wheel 1 angular momentum');
+    ylabel('Angular momentum [Nms]');
+    xlabel('time[sec]')
+    grid on
+
+subplot(4,2,4)
+    plot(SimData.Time_vec/60 ,HW2)
+    title('Reaction wheel 2 angular momentum');
+    ylabel('Angular momentum [Nms]');
+    xlabel('time[sec]')
+    grid on
+
+
+subplot(4,2,6)
+    plot(SimData.Time_vec/60 ,HW3)
+    title('Reaction wheel 3 angular momentum');
+    ylabel('Angular momentum [Nms]');
+    xlabel('time[sec]')
+    grid on
+
+
+subplot(4,2,8)
+    plot(SimData.Time_vec/60 ,HW4)
+    title('Reaction wheel 4 angular momentum');
+    ylabel('Angular momentum [Nms]');
+    xlabel('time[sec]')
+    grid on
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+figure
+subplot(3,3,1)
+    plot(SimData.Time_vec/60 ,phi_vec * 180/ pi)
+    title('\phi^\circ in time')
+    xlabel('time[sec]')
+    ylabel('Torque[Nm]')
+    grid on
+subplot(3,3,2)
+    plot(SimData.Time_vec/60 ,Theta_vec * 180/pi)
+
+    title('\Theta^\circ in time')
+    xlabel('time[sec]')
+    ylabel('Torque[Nm]')
+    grid on
+subplot(3,3,3)
+    plot(SimData.Time_vec/60 ,psi_vec * 180 / pi)
+
+    title('\psi^\circ in time ')
+    xlabel('time[sec]')
+    ylabel('Torque[Nm]')
+    grid on
+subplot(3,3,4)
+    plot(SimData.Time_vec/60 ,P_data)
+
+    title('Roll rate [rad/s]')
+    xlabel('time[sec]')
+    ylabel('Torque[Nm]')
+    grid on
+subplot(3,3,5)
+    plot(SimData.Time_vec/60 ,Q_data)
+    title('Pitch rate [\circ/s]');
+    ylabel('Angular momentum [Nms]');
+    xlabel('time[sec]')
+    grid on
+
+subplot(3,3,6)
+    plot(SimData.Time_vec/60 ,R_data)
+    title('Yaw rate [\circ/s]');
+    ylabel('Angular momentum [Nms]');
+    xlabel('time[sec]')
+    grid on
+
+
+subplot(3,3,7)
+    plot(SimData.Time_vec/60 ,GRB_Alert)
+    title('GRB state');
+    xlabel('time[sec]')
+    grid on
+
+
+subplot(3,3,8)
+    plot(SimData.Time_vec/60 ,comm_vec)
+    title('Communication state');
+    xlabel('time[sec]')
+    grid on
+
+
+
+subplot(3,3,9)
+    plot(SimData.Time_vec/60 ,DayOrNight_vec)
+    title('Day - 1 \ Night - 0 state');
+    xlabel('time[sec]')
+    grid on
+
+
+
+
+
+
+

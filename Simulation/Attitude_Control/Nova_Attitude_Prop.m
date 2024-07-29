@@ -85,7 +85,7 @@ q_eul_t = flip(q_eul_t);
 
 
 %% Simulink
-OverrideSimulink = true;
+OverrideSimulink = false;
 if(OverrideSimulink)
     % Calculated target angular state [rad]
     Next_Step_Angular.Psi = eul_t(1);
@@ -108,6 +108,8 @@ else
     q_error = Data(8:11,end); % error quaternion
     w_error = Data(12:14,end);% [rad/sec] angular velocity error
     Tc = Data(15:17,end); % [Nm] Torque command
+    TW = Data(19:22,end); % Torque on wheels
+    HW = Data(23:26,end); % Angular momentum on wheels
     % Convert quaternion to euler angles - ZYX sequnce
     eul_f = quat2eul(flip(q_f)');
     eul_error = quat2eul(flip(q_error)');
@@ -132,6 +134,15 @@ else
     Params.Attitude_Control_Data.Lc = Tc(1);
     Params.Attitude_Control_Data.Mc = Tc(2);
     Params.Attitude_Control_Data.Nc = Tc(3);
+    
+    Params.Attitude_Control_Data.TW1 = TW(1);
+    Params.Attitude_Control_Data.TW2 = TW(2);
+    Params.Attitude_Control_Data.TW3 = TW(3);
+    Params.Attitude_Control_Data.TW4 = TW(4);
+    Params.Attitude_Control_Data.HW1 = HW(1);
+    Params.Attitude_Control_Data.HW2 = HW(2);
+    Params.Attitude_Control_Data.HW3 = HW(3);
+    Params.Attitude_Control_Data.HW4 = HW(4);
 end
 end
 
