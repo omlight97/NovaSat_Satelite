@@ -96,9 +96,12 @@ All_components        = [EPS, TX_x_band, RX_S_band, Antenna, OBC,...
 
 Total_Power           = sum(All_components,2);
 
-Params.power_budget   = table(EPS, TX_x_band, RX_S_band, Antenna, OBC,...
-                              Star_Tracker, Sun_Sensor, IMU, Prop_System, ...
-                              Reaction_Wheels, Heaters, Electro_Optic_Payload, Total_Power, 'RowNames', Modes);
+% Params.power_budget   = table(EPS, TX_x_band, RX_S_band, Antenna, OBC,...
+                              % Star_Tracker, Sun_Sensor, IMU, Prop_System, ...
+                              % Reaction_Wheels, Heaters, Electro_Optic_Payload, Total_Power, 'RowNames', Modes);
+Params.SolarArea=4*0.4*0.2; % number_of_solar_panels*hight*length
+Params.D=3/100;     %Degradation
+Params.Years=5;
 
 %% Communication
 
@@ -136,12 +139,17 @@ Params.mass  = 15.3;     % mass [kg]
 Params.CP_AL = 921.096;  % Aluminum heat capacity [J/kg*K]
 
 %% Attitude Control
-Params.Attitude_Angles0 = [5, 10, 12]; % Initial attitude [deg]
-Params.Attitude_rate0   = [0.1, 0, 0];   % Initial angular rate [deg/s]
+Params.Attitude_Angles0.Psi   = 0.202; % Initial attitude [rad]
+Params.Attitude_Angles0.Theta = 1.972; % Initial attitude [rad]
+Params.Attitude_Angles0.Phi   =1.651; % Initial attitude [rad]
 
-Params.p_max = 0.05;          % Maximum roll rate  [rad\s]
-Params.q_max = Params.p_max;  % Maximum pitch rate [rad\s]
-Params.r_max = Params.p_max;  % Maximum yaw rate   [rad\s]
+Params.Attitude_rate0.P   = 0;   % Initial angular rate [rad/s]
+Params.Attitude_rate0.Q   = 0;   % Initial angular rate [rad/s]
+Params.Attitude_rate0.R   = 0;   % Initial angular rate [rad/s]
+
+Params.p_max = 0.05;          % Maximum roll rate  [rad/s]
+Params.q_max = Params.p_max;  % Maximum pitch rate [rad/s]
+Params.r_max = Params.p_max;  % Maximum yaw rate   [rad/s]
 
 % Controller Gains
 Params.gains.kpx = 6.102e-02; 

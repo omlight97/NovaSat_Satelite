@@ -34,13 +34,13 @@ addpath(genpath(pwd));
 % [DataBase2.SunTimes, DataBase2.SunPosition]     = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_SunPosition']);
 % [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition']);
 try
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
-    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_MatlabReport_-_EarthPosition']);
 catch
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
-    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/3 days/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'/3 days/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'/3 days/NOVASAT-16U_MatlabReport_-_EarthPosition']);
 end
 
 e     = DataBase.SatProperties(:,9);
@@ -54,7 +54,7 @@ Time_vec=DataBase.SatTimes;
 %%
 % Gets vector of Communication time for 3 Satellites(0-No Comm, 1-Comm)
 AccessInmarsatVec = GetAccess(Time_vec,'Inmarsat');
-% AccessTechnion = GetAccess(Time_vec,'GS');
+AccessTechnion = GetAccess(Time_vec,'GS');
 AccessSumTime = GetSumAccess(AccessInmarsatVec);
 DayOrNight_vec = GetAccess(Time_vec,'Sun');
 InmarsatPostion=table2array(DataBase.SatProperties(:,22:30));
