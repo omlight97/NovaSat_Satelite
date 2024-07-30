@@ -28,7 +28,7 @@ function [Access_Times] = GetAccess(Time_vec,WantedData)
 % Last update: 1.7.24 (Yarden & Benny - NovaSAT)
 % ------------------------------------------------------------------------------ %
 
-if contains(WantedData,'Sun')
+if contains(WantedData,'Sun') || contains(WantedData,'GS')
     Instances = 1;
     Access_Times = zeros(length(Time_vec),Instances);
 elseif contains(WantedData, 'Inmarsat')
@@ -47,10 +47,9 @@ Start_Point = Start_Date_sec + Start_time_sec;
 
 if contains(WantedData,'Sun')
         
-        File_Name = ['Sun','.txt'];
-       
-        Comm_Table = readtable(File_Name,'ReadVariableNames', false);
-    
+        File_Name = ['Sun','.txt']; 
+        Comm_Table = readtable(File_Name,'ReadVariableNames', false); 
+           
         % Filtering the end of the table that is not numbers
         NaN_index = find(isnan(table2array(Comm_Table(:,1))),1);
         Comm_Table = Comm_Table(1:NaN_index-1,:);
@@ -85,6 +84,44 @@ if contains(WantedData,'Sun')
             Access_Times(ind_start:ind_stop) = 1;
        end
 
+elseif contains(WantedData,'GS')
+        
+        File_Name = ['GS','.txt']; 
+        Comm_Table = readtable(File_Name,'ReadVariableNames', false); 
+           
+        % Filtering the end of the table that is not numbers
+        NaN_index = find(isnan(table2array(Comm_Table(:,1))),1);
+        Comm_Table = Comm_Table(1:NaN_index-1,:);
+        
+        % Finding vector of start times in seconds since start
+        Comm_Start_Temp(:,1) = Comm_Table.Var2; 
+        Comm_Start_Temp(:,2) = Name2Month(Comm_Table.Var3);
+        Comm_Start_Temp(:,3) = Comm_Table.Var4;
+    
+        Comm_Start_Date = datenum(datetime(Comm_Start_Temp(:,3),Comm_Start_Temp(:,2),Comm_Start_Temp(:,1)))*86400;
+        Comm_Start_Time = seconds(table2array(Comm_Table(:,5)));
+        Comm_Start_sec = Comm_Start_Date + Comm_Start_Time;
+        
+        Comm_Start_Final = Comm_Start_sec - Start_Point;
+        
+        % Finding vector of stop times in seconds since start
+        Comm_Stop_Temp(:,1) = Comm_Table.Var6; 
+        Comm_Stop_Temp(:,2) = Name2Month(Comm_Table.Var7);
+        Comm_Stop_Temp(:,3) = Comm_Table.Var8;
+    
+        Comm_Stop_Date = datenum(datetime(Comm_Stop_Temp(:,3),Comm_Stop_Temp(:,2),Comm_Stop_Temp(:,1)))*86400;
+        Comm_Stop_Time = seconds(table2array(Comm_Table(:,9)));
+        Comm_Stop_sec = Comm_Stop_Date + Comm_Stop_Time;
+    
+        Comm_Stop_Final = Comm_Stop_sec - Start_Point;
+        
+        % We are going to populate the Communications time vector with 1 if we
+        % are in an active communication time with sat #k
+        for j =1:length(Comm_Stop_Final)
+            ind_start = find(Time_vec>=Comm_Start_Final(j),1);
+            ind_stop = find(Time_vec>=Comm_Stop_Final(j),1);
+            Access_Times(ind_start:ind_stop) = 1;
+       end
 
 elseif contains(WantedData, 'Inmarsat')
     for k=1:Instances

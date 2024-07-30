@@ -69,28 +69,45 @@ for par = Params.power_budget.Properties.VariableNames
 end
 
 % total power column from power budget 
-total_power_current_mode = Mode_data(:,'Total_Power').Variables;
+power_consumption = Mode_data(:,'Total_Power').Variables;
 
 % power production calculation
+
 if Flags.IsDay
     Power_Production = Params.vertical_power_produc*abs(cos(theta_angle));
-    Total_Power = Power_Production - total_power_current_mode; %[w] Power available to charge the batteries
+    Total_Power = Power_Production - power_consumption/60; %[w] Power available to charge the batteries
+
+    current_charge_next = Total_Power*dt/3600;
+
+    if current_charge + current_charge_next < Params.Max_capacity % check for overcharge
+        next_charge = current_charge +  current_charge_next;
+    else
+    next_charge = Params.Max_capacity;
+    end
 
 else
     Power_Production = 0;
-    Total_Power = current_charge/(60) - total_power_current_mode; %[w] Power available to charge the batteries
+   if current_charge == Params.Max_capacity
+    % if current_charge < 35
+        Total_Power = 180 - power_consumption; %[w] Power available to charge the batteries
+    else
+         % Total_Power =current_charge/(dt/3600) - power_consumption; %[w] Power available to charge the batteries
+         Total_Power =current_charge - power_consumption/60; %[w] Power available to charge the batteries
 
-end
+    end
 
-% Total_Power = Power_Production - total_power_current_mode; %[w] Power available to charge the batteries
+    current_charge_next = Total_Power*dt/3600;
 
-
-if current_charge + Total_Power*dt/3600 < Params.Max_capacity % check for overcharge
-    next_charge =   Total_Power*dt/3600;
-else
+    if current_charge - current_charge_next < Params.Max_capacity % check for overcharge
+        next_charge = current_charge -  current_charge_next;
+    else
     next_charge = Params.Max_capacity;
+    end
+
 end
 
 Power.Total_Power = Total_Power;
 Power.Production  = Power_Production;
 end
+
+

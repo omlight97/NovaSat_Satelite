@@ -13,58 +13,56 @@ function Params = PowerBudget(Params)
 
 %-------------! keep in mind !---------------------------
 % Modes should be reviewed to make sure that it's corrert
-% The commponent list is not updated!!!!
+% The commponent list is updated for spring semester 2024
 %--------------------------------------------------------
 
 
 Params.Max_capacity = 43; % Maximum allowed power for the batteries [Wh] 
-Params.vertical_power_produc = 4*45; % maximum solar power production [w]
 
 % everything is in [w]
 
-% Modes = {'Sun Cruise','Night Cruise','GRB event','Communication','Detumbling','Commissioning','Decomissioning'};
-
 Modes = {'Sun Cruise','Night Cruise','GRB event','Communication'};
-n=length(Modes);
 
 % Avionics
-EPS                   =  0.6.*ones(1,n)';
-batteries             =  0.1.*ones(1,n)';
-Solar_Panels          =  [zeros(1,n)]'; %TBD
+ACU                   =  [zeros(1,4)]'; %TBD
+PDU                   =  [zeros(1,4)]'; %TBD
+batteries             =  6.*ones(1,4)';
+Solar_Panels          =  [zeros(1,4)]'; %TBD
 
 % Communication
-Antenna_L               =  [zeros(1,n)]'; %TBD
-Antenna_S               =  2*[0,0,ones(1,2)]';
-Transmitter_L           =  18*ones(1,n)';
-Transmitter_S           =  13*[0,0,ones(1,2)]';
+Antenna_S                     =  2*[0,0,ones(1,2)]';
+Transmitter_and_Antenna_L     =  [7,7,7,8]';
+Transmitter_S                 =  [1.5,1.5,1.5,13]';
 
 % Computers & Data
-OBC                   =  2*ones(1,n)';
+OBC                   =  2*ones(1,4)';
 
 % Control
-Star_Tracker          =  3*1.5*[0,ones(1,3)]';
-Sun_Sensor            =  3*0.35*[1,0,0,1]';
+Star_Tracker          =  3*0.165*[0,ones(1,3)]';
+Sun_Sensor            =  3*0.1*[1,0,0,1]';
 IMU                   =  2*1.5*[0,0,1,0]';
-GPS                   =  0.05*ones(1,n)';
-Magnet_Torquer        =  3*0.2*[1,1,0,1]';
-Magnometer            =  3*0.05*ones(1,n)';
-Reaction_Wheels       =  4*4*ones(1,n)';
+GPS                   =  0.05*ones(1,4)';
+Magnet_Torquer        =  3*0.68*[1,1,0,1]';
+Magnometer            =  3*0.05*ones(1,4)';
+Reaction_Wheels       =  4*0.8*ones(1,4)';
 
 % Structure & Deep Space
-Heaters               =  zeros(1,n)'; %TBD
+Heaters               =  zeros(1,4)'; %TBD
 
 %Payload
-Payload               =  22*ones(1,n)';
+Payload               =  15*ones(1,4)';
 
 
-All_components        = [EPS, batteries,Solar_Panels , Antenna_L, Antenna_S, Transmitter_L,Transmitter_S,OBC,...
+All_components        = [ACU, PDU, batteries,Solar_Panels, Antenna_S, Transmitter_and_Antenna_L,Transmitter_S,OBC,...
                         Star_Tracker, Sun_Sensor, IMU, GPS,Magnet_Torquer,Magnometer, ...
                         Reaction_Wheels, Heaters, Payload];
 
 Total_Power           = sum(All_components,2);
 
 
-Params.power_budget   = table(All_components, Total_Power, 'RowNames', Modes);
+Params.power_budget   = table(ACU, PDU, batteries,Solar_Panels, Antenna_S, Transmitter_and_Antenna_L,Transmitter_S,OBC,...
+                        Star_Tracker, Sun_Sensor, IMU, GPS,Magnet_Torquer,Magnometer, ...
+                        Reaction_Wheels, Heaters, Payload, Total_Power, 'RowNames', Modes);
 
 
 

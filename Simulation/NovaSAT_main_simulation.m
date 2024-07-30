@@ -34,13 +34,13 @@ addpath(genpath(pwd));
 % [DataBase2.SunTimes, DataBase2.SunPosition]     = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_SunPosition']);
 % [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition']);
 try
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
-    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_MatlabReport_-_EarthPosition']);
 catch
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_SunPosition']);
-    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'/Extra/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/3 days/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'/3 days/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'/3 days/NOVASAT-16U_MatlabReport_-_EarthPosition']);
 end
 
 e     = DataBase.SatProperties(:,9);
@@ -53,12 +53,14 @@ beta=DataBase.SatProperties(:,3);
 Time_vec=DataBase.SatTimes;
 %%
 % Gets vector of Communication time for 3 Satellites(0-No Comm, 1-Comm)
+
 AccessInmarsatVec = GetAccess(Time_vec,'Inmarsat');
-% AccessTechnion = GetAccess(Time_vec,'GS');
+AccessTechnion = GetAccess(Time_vec,'GS');
 AccessSumTime = GetSumAccess(AccessInmarsatVec);
 DayOrNight_vec = GetAccess(Time_vec,'Sun');
 InmarsatPostion=table2array(DataBase.SatProperties(:,22:30));
 PositionCommTime=Get_position_SumAccess(AccessSumTime,InmarsatPostion);
+
 %%
 % Creates 'Params'
 if ~exist('Params')
@@ -239,7 +241,12 @@ while  i <=  length(DataBase.SunTimes)
     SimData.Power.Total_Power(i,:) = Power.Total_Power;
 
     current_charge = next_charge;
-% 
+
+    DOD_vec(i) = DOD;
+    if Power.Total_Power<70
+                Flags.Communication=0;
+    end
+
 % %     %% Thermal
 % %     if ~mod(time_vec(i),Numeric_properties.dt_for_thermal)
 % % %         Thermal = Jeri_Calc_Thermal(World_Model, Current_Step_Angular, Current_Step_Orbit, Power, Flags, dt, Params, Thermal);
@@ -310,6 +317,16 @@ while  i <=  length(DataBase.SunTimes)
        Theta_vec(i)=Next_Step_Angular.Theta;
        phi_vec(i)=Next_Step_Angular.Phi;
        Current_Step_Angular = Next_Step_Angular;
+       %   psi_vec(i) = 0;
+       % Theta_vec(i)=0;
+       % phi_vec(i)=0;
+       % % Current_Step_Angular = Next_Step_Angular;
+       % Current_Step_Angular.Psi=0;
+       %        Current_Step_Angular.Phi=0;
+       %         Current_Step_Angular.Theta=0;
+
+
+       
        % 
        % Current_Step_Angular.Psi=Next_Angular_State.Psi;
        % Current_Step_Angular.angles(2)=i.Theta;
@@ -369,7 +386,7 @@ disp('Simulation has completed')
 %% plot
 
 figure()
-subplot(2,3,1);
+subplot(3,1,1);
 % sgtitle(['Orbit For a=', num2str(a(1)), ' [km], i=', num2str(i(1)), '[deg]'])
 a=table2array(a);
 e=table2array(e);
@@ -381,49 +398,51 @@ title('r(t)');
 grid on;
 %ylim([min(a)-6400 max(a)-6340])
 
-subplot(2,3,2);
+subplot(3,1,2);
 plot(Time_vec/60,e);
 xlabel('time [min]');
 ylabel('e'); ylim([-0.02,0.05]);
 title('e(t)');
 grid on;
 
-subplot(2,3,3);
+subplot(3,1,3);
 plot(Time_vec/60,i2);
 xlabel('time [min]');
 ylabel('i [deg]');
 title('i(t)');
 grid on;
 figure;
-subplot(2,3,1);
+subplot(3,1,1);
 hold on;
 plot(Time_vec/60,psi_vec);
 xlabel('time [min]');
 ylabel('psi [rad]');
 title('psi vs time');
 grid on;
-subplot(2,3,2);
+subplot(3,1,2);
 hold on;
 plot(Time_vec/60,Theta_vec);
 xlabel('time [min]');
 ylabel('theta [rad]');
 title('theta vs time');
 grid on;
-subplot(2,3,3);
+subplot(3,1,3);
 hold on;
 plot(Time_vec/60,phi_vec);
 xlabel('time [min]');
 ylabel('phi [rad]');
 title('phi vs time');
 grid on;
-subplot(2,3,4);
+%%
+figure()
+subplot(3,1,1);
 hold on;
 plot(Time_vec/60,DayOrNight_vec);
 xlabel('time [min]');
 ylabel('ISDay [rad]');
 title('DayOrNight vs time');
 grid on;
-subplot(2,3,5);
+subplot(3,1,2);
 hold on;
 plot(Time_vec/60,GRB_Alert);
 xlabel('time [min]');
@@ -436,47 +455,89 @@ imarasat2=zeros(1,length(Time_vec));
 imarasat3=zeros(1,length(Time_vec));
 
 for i=1:length(Time_vec)
-    if PositionCommTime(i,1)==1
+    if PositionCommTime(i,1)==1 && PositionCommTime(i,2)>2
         imarasat1(i)=PositionCommTime(i,2);
     end
-    if PositionCommTime(i,1)==2
+    if PositionCommTime(i,1)==2 && PositionCommTime(i,2)>2
         imarasat2(i)=PositionCommTime(i,2);
     end
-    if PositionCommTime(i,1)==3
+    if PositionCommTime(i,1)==3 && PositionCommTime(i,2)>2
         imarasat3(i)=PositionCommTime(i,2);
     end
 end
 
-subplot(2,3,6);
+subplot(3,1,3);
 hold all;
-scatter(Time_vec/60,imarasat1);
-scatter(Time_vec/60,imarasat2);
-scatter(Time_vec/60,imarasat3);
+bar(Time_vec/60,imarasat1);
+bar(Time_vec/60,imarasat2);
+bar(Time_vec/60,imarasat3);
 xlabel('time [min]');
 ylabel('communicationtime[min] ');
 title('communication vs time');
 grid on;
 legend('inmarsat1','inmarsat2','inmarsat3');
+ylim([1 40]);
 %%
 figure;
-subplot(1,3,1);
+subplot(4,1,1);
 hold on;
 plot(Time_vec/60,SimData.Power.Total_Power');
 xlabel('time [min]');
 ylabel('Total Power [w]');
 title('Total Power vs time');
 grid on;
-subplot(1,3,2);
+% ylim([0 200]);
+subplot(4,1,2);
 hold on;
 plot(Time_vec/60,SimData.Power.Production');
 xlabel('time [min]');
 ylabel('Production [w]');
 title('Production vs time');
 grid on;
-subplot(1,3,3);
+subplot(4,1,3);
 hold on;
 plot(Time_vec/60,SimData.Batteries_Electric_Charge');
 xlabel('time [min]');
 ylabel('Batteries ElectricCharge [W]');
 title('Batteries ElectricCharge vs time');
 grid on;
+subplot(4,1,4)
+hold on;
+plot(Time_vec/60,DOD_vec);
+xlabel('time [min]');
+ylabel('%');
+title('DOD vs time');
+grid on;
+%%
+figure()
+axis equal;
+xlim([-1 1]);
+ylim([-1 1]);
+zlim([-1 1]);
+xlabel('X');
+ylabel('Y');
+zlabel('Z');
+hold on;
+
+% Initialize quiver objects for the principal axes
+hX = quiver3(0, 0, 0, 1, 0, 0, 'r', 'LineWidth', 2);
+hY = quiver3(0, 0, 0, 0, 1, 0, 'g', 'LineWidth', 2);
+hZ = quiver3(0, 0, 0, 0, 0, 1, 'b', 'LineWidth', 2);
+
+% Loop to update the plot
+for k = 1:length(Theta_vec)
+    % Compute the rotation matrix from Euler angles
+   R = eul2rotm([psi_vec(k) Theta_vec(k) phi_vec(k)], 'ZYX');
+    
+    % Principal axes in the rotated frame
+    xAxis = R(:, 1);
+    yAxis = R(:, 2);
+    zAxis = R(:, 3);
+    % Update the quiver objects
+    set(hX, 'UData', xAxis(1), 'VData', xAxis(2), 'WData', xAxis(3));
+    set(hY, 'UData', yAxis(1), 'VData', yAxis(2), 'WData', yAxis(3));
+    set(hZ, 'UData', zAxis(1), 'VData', zAxis(2), 'WData', zAxis(3));
+    
+    drawnow;
+
+end
