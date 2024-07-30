@@ -57,6 +57,7 @@ Time_vec=DataBase.SatTimes;
 AccessInmarsatVec = GetAccess(Time_vec,'Inmarsat');
 AccessTechnion = GetAccess(Time_vec,'GS');
 AccessSumTime = GetSumAccess(AccessInmarsatVec);
+AccessSumTimeGS = GetSumAccess(AccessTechnion);
 DayOrNight_vec = GetAccess(Time_vec,'Sun');
 InmarsatPostion=table2array(DataBase.SatProperties(:,22:30));
 PositionCommTime=Get_position_SumAccess(AccessSumTime,InmarsatPostion);
@@ -160,6 +161,9 @@ phi_vec=zeros(size(DataBase.EarthTimes));
 B_vec=zeros(3,length(phi_vec));
 GRB_Alert= Get_GRB_Alert(Time_vec);
 Flags.sun_search.initial_flag = 1;
+Params.Communication=zeros(length(phi_vec),6);
+count=1;
+
 %%
 while  i <=  length(DataBase.SunTimes)
     if GRB_Alert(i)
@@ -188,13 +192,31 @@ while  i <=  length(DataBase.SunTimes)
     SimData.Day_Or_Night(i) = DayOrNight_vec(i);
     [B_vec(:,i)]  = earthmagfield13(SatPosition', Time_vec(i), g, h, alpha_G_0, n);
     Params.MagneticField=B_vec;
-    Params.Communication=PositionCommTime;
+    % Params.Communication(i,:)=PositionCommTime(i,:);
 %     if Flags.Skip
+if i>2
+    if GRB_Alert(i-count) &&  not(GRB_Alert(i)) && count <10
     if PositionCommTime(i,2)>15
         Flags.Communication=1;
+        Params.Communication(i,:)=PositionCommTime(i,:);
     else
         Flags.Communication=0;
     end
+    count=count+1;
+    end
+end
+if count >10
+    count=1;
+end
+if AccessSumTimeGS(i,1)>3
+    Flags.Communication=1;
+    Params.Communication(i,3)=0;
+    Params.Communication(i,4)=0;
+    Params.Communication(i,5)=0;
+
+    else
+     Flags.Communication=0;
+end
 
     if strcmp(states.Logic,'operational')
         if Flags.Day
@@ -435,14 +457,14 @@ title('phi vs time');
 grid on;
 %%
 figure()
-subplot(3,1,1);
+subplot(4,1,1);
 hold on;
 plot(Time_vec/60,DayOrNight_vec);
 xlabel('time [min]');
 ylabel('ISDay [rad]');
 title('DayOrNight vs time');
 grid on;
-subplot(3,1,2);
+subplot(4,1,2);
 hold on;
 plot(Time_vec/60,GRB_Alert);
 xlabel('time [min]');
@@ -466,7 +488,7 @@ for i=1:length(Time_vec)
     end
 end
 
-subplot(3,1,3);
+subplot(4,1,3);
 hold all;
 bar(Time_vec/60,imarasat1);
 bar(Time_vec/60,imarasat2);
@@ -477,6 +499,14 @@ title('communication vs time');
 grid on;
 legend('inmarsat1','inmarsat2','inmarsat3');
 ylim([1 40]);
+subplot(4,1,4);
+hold all;
+bar(Time_vec/60,AccessSumTimeGS(:,1));
+xlabel('time [min]');
+ylabel('communicationtime[min] ');
+title('communication with the GS vs time');
+grid on;
+ylim([0.1 20]);
 %%
 figure;
 subplot(4,1,1);
@@ -509,35 +539,35 @@ ylabel('%');
 title('DOD vs time');
 grid on;
 %%
-figure()
-axis equal;
-xlim([-1 1]);
-ylim([-1 1]);
-zlim([-1 1]);
-xlabel('X');
-ylabel('Y');
-zlabel('Z');
-hold on;
-
-% Initialize quiver objects for the principal axes
-hX = quiver3(0, 0, 0, 1, 0, 0, 'r', 'LineWidth', 2);
-hY = quiver3(0, 0, 0, 0, 1, 0, 'g', 'LineWidth', 2);
-hZ = quiver3(0, 0, 0, 0, 0, 1, 'b', 'LineWidth', 2);
-
-% Loop to update the plot
-for k = 1:length(Theta_vec)
-    % Compute the rotation matrix from Euler angles
-   R = eul2rotm([psi_vec(k) Theta_vec(k) phi_vec(k)], 'ZYX');
-    
-    % Principal axes in the rotated frame
-    xAxis = R(:, 1);
-    yAxis = R(:, 2);
-    zAxis = R(:, 3);
-    % Update the quiver objects
-    set(hX, 'UData', xAxis(1), 'VData', xAxis(2), 'WData', xAxis(3));
-    set(hY, 'UData', yAxis(1), 'VData', yAxis(2), 'WData', yAxis(3));
-    set(hZ, 'UData', zAxis(1), 'VData', zAxis(2), 'WData', zAxis(3));
-    
-    drawnow;
-
-end
+% figure()
+% axis equal;
+% xlim([-1 1]);
+% ylim([-1 1]);
+% zlim([-1 1]);
+% xlabel('X');
+% ylabel('Y');
+% zlabel('Z');
+% hold on;
+% 
+% % Initialize quiver objects for the principal axes
+% hX = quiver3(0, 0, 0, 1, 0, 0, 'r', 'LineWidth', 2);
+% hY = quiver3(0, 0, 0, 0, 1, 0, 'g', 'LineWidth', 2);
+% hZ = quiver3(0, 0, 0, 0, 0, 1, 'b', 'LineWidth', 2);
+% 
+% % Loop to update the plot
+% for k = 1:length(Theta_vec)
+%     % Compute the rotation matrix from Euler angles
+%    R = eul2rotm([psi_vec(k) Theta_vec(k) phi_vec(k)], 'ZYX');
+% 
+%     % Principal axes in the rotated frame
+%     xAxis = R(:, 1);
+%     yAxis = R(:, 2);
+%     zAxis = R(:, 3);
+%     % Update the quiver objects
+%     set(hX, 'UData', xAxis(1), 'VData', xAxis(2), 'WData', xAxis(3));
+%     set(hY, 'UData', yAxis(1), 'VData', yAxis(2), 'WData', yAxis(3));
+%     set(hZ, 'UData', zAxis(1), 'VData', zAxis(2), 'WData', zAxis(3));
+% 
+%     drawnow;
+% 
+% end

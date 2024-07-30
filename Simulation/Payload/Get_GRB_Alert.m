@@ -14,6 +14,9 @@ GRB_Start_time=60*60; % Default GRB alert time - after 60 minutes
 GRB_Index=find(duration>=GRB_Start_time,1); % Finding index of wanted time
 
 GRB_Alert=zeros(size(duration));
-GRB_Alert(GRB_Index:GRB_Index+10)=1; % sets GRB alert time to 1
+while GRB_Index<length(duration)-10
+GRB_Alert(GRB_Index:GRB_Index+10)=1;% sets GRB alert time to 1
+GRB_Index=GRB_Index+400;
+end
 
 end
