@@ -65,7 +65,7 @@ else
     current_charge_next = Total_Power*dt/3600;
 
     % if current_charge_next >0 % check for undercharge
-        next_charge =  current_charge + current_charge_next ;
+        next_charge =  current_chage + current_charge_next + ;
     % else
     % next_charge = 0;
     % % disp('undercharge')

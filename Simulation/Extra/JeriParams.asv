@@ -99,9 +99,14 @@ Total_Power           = sum(All_components,2);
 % Params.power_budget   = table(EPS, TX_x_band, RX_S_band, Antenna, OBC,...
                               % Star_Tracker, Sun_Sensor, IMU, Prop_System, ...
                               % Reaction_Wheels, Heaters, Electro_Optic_Payload, Total_Power, 'RowNames', Modes);
-Params.SolarArea=4*0.4*0.2; % number_of_solar_panels*hight*length
+Params.SolarArea=4*0.4*0.2;  % number_of_solar_panels*hight*length
 Params.D=3/100;     %Degradation
-Params.Years=5;
+Params.years=5;
+Params.Id;
+Params.I0, 
+Params.SolarEfficiency=
+Params.Xe,
+Params.Xd
 
 %% Communication
 

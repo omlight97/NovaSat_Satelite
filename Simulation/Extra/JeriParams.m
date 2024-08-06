@@ -70,38 +70,43 @@ Flags.Start_at_RAAN = 1; % default
 
 %% Electricity
 
-Params.Max_capacity = 154; % Maximum allowed power [Wh] 
+Params.Max_capacity = 45; % Maximum allowed power [Wh] 
 Params.vertical_power_produc = 133.2847; % maximum solar power production [w]
 
 % everything is in [w]
 Modes = {'Communication', 'Max_Sun', 'Payload_Mission', 'Orbit_Correction'...
         , 'Attitude_Correction', 'cruise_safe_day', 'cruise_safe_night', 'Momentum_Unload', 'Eco'}';
 
-EPS                   =  [1.94*ones(1,5), 0.574, 0.574, 1.94, 0.574]';
-TX_x_band             =  [5.1, zeros(1,8)]';
-RX_S_band             =  [2.2*ones(1,5), zeros(1,2), 2.2*ones(1,2)]';
-Antenna               =  [26.6, zeros(1,8)]';
-OBC                   =  0.7*ones(1,9)';
-Star_Tracker          =  [2.2, 1.4,	2.2, 2.2, 2.2, 0.74, 0.74, 0.74, 1.6]';
-Sun_Sensor            =  [0.1518*ones(1,6),	0.1386,	0.1518,	0.1386]';
-IMU                   =  [4, 3, 4, 4, 4, 3, 3, 4, 3]';
-Prop_System           =  [zeros(1,3), 3,zeros(1,3), 1, 0]';
-Reaction_Wheels       =  [7.2, 1.2, 7.2, 7.2, 7.2, 1.2, 1.2, 0.4, 1.2]';
-Heaters               =  zeros(1,9)';
-Electro_Optic_Payload =  [0, 0, 3.5, zeros(1,6)]';
-
-All_components        = [EPS, TX_x_band, RX_S_band, Antenna, OBC,...
-                        Star_Tracker, Sun_Sensor, IMU, Prop_System, ...
-                        Reaction_Wheels, Heaters, Electro_Optic_Payload];
-
-Total_Power           = sum(All_components,2);
+% EPS                   =  [1.94*ones(1,5), 0.574, 0.574, 1.94, 0.574]';
+% TX_x_band             =  [5.1, zeros(1,8)]';
+% RX_S_band             =  [2.2*ones(1,5), zeros(1,2), 2.2*ones(1,2)]';
+% Antenna               =  [26.6, zeros(1,8)]';
+% OBC                   =  0.7*ones(1,9)';
+% Star_Tracker          =  [2.2, 1.4,	2.2, 2.2, 2.2, 0.74, 0.74, 0.74, 1.6]';
+% Sun_Sensor            =  [0.1518*ones(1,6),	0.1386,	0.1518,	0.1386]';
+% IMU                   =  [4, 3, 4, 4, 4, 3, 3, 4, 3]';
+% Prop_System           =  [zeros(1,3), 3,zeros(1,3), 1, 0]';
+% Reaction_Wheels       =  [7.2, 1.2, 7.2, 7.2, 7.2, 1.2, 1.2, 0.4, 1.2]';
+% Heaters               =  zeros(1,9)';
+% Electro_Optic_Payload =  [0, 0, 3.5, zeros(1,6)]';
+% 
+% All_components        = [EPS, TX_x_band, RX_S_band, Antenna, OBC,...
+%                         Star_Tracker, Sun_Sensor, IMU, Prop_System, ...
+%                         Reaction_Wheels, Heaters, Electro_Optic_Payload];
+% 
+% Total_Power           = sum(All_components,2);
 
 % Params.power_budget   = table(EPS, TX_x_band, RX_S_band, Antenna, OBC,...
                               % Star_Tracker, Sun_Sensor, IMU, Prop_System, ...
                               % Reaction_Wheels, Heaters, Electro_Optic_Payload, Total_Power, 'RowNames', Modes);
 Params.SolarArea=4*0.4*0.2;  % number_of_solar_panels*hight*length
 Params.D=3/100;     %Degradation
-Params.Years=5;
+Params.years=5;
+Params.Id=0.9;
+Params.I0=1361;
+Params.SolarEfficiency=0.3;
+Params.Xe=0.65;
+Params.Xd=0.85;
 
 %% Communication
 

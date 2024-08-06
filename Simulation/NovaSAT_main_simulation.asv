@@ -38,9 +38,9 @@ try
     [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_FullSimulation']);
     [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_MatlabReport_-_EarthPosition']);
 catch
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'/3 days/NOVASAT-16U_MatlabReport_-_SunPosition']);
-    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'/3 days/NOVASAT-16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'/3 days/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_MatlabReport_-_EarthPosition']);
 end
 
 e     = DataBase.SatProperties(:,9);
@@ -161,6 +161,9 @@ phi_vec=zeros(size(DataBase.EarthTimes));
 B_vec=zeros(3,length(phi_vec));
 GRB_Alert= Get_GRB_Alert(Time_vec);
 Flags.sun_search.initial_flag = 1;
+Params.Communication=zeros(length(phi_vec),6);
+count=1;
+
 %%
 while  i <=  length(DataBase.SunTimes)
     if GRB_Alert(i)
@@ -189,24 +192,32 @@ while  i <=  length(DataBase.SunTimes)
     SimData.Day_Or_Night(i) = DayOrNight_vec(i);
     [B_vec(:,i)]  = earthmagfield13(SatPosition', Time_vec(i), g, h, alpha_G_0, n);
     Params.MagneticField=B_vec;
-    Params.Communication=PositionCommTime;
+    % Params.Communication(i,:)=PositionCommTime(i,:);
 %     if Flags.Skip
-if i>1
-    if GRB_Alert(i-1)
-    if PositionCommTime(i,2)>15
+if i>2
+    if GRB_Alert(i-count) &&  not(GRB_Alert(i)) && count <10
+    if PositionCommTime(i,2)>10
         Flags.Communication=1;
+        Params.Communication(i,:)=PositionCommTime(i,:);
     else
         Flags.Communication=0;
     end
+    count=count+1;
     end
+end
+if count >10
+    count=1;
 end
 if AccessSumTimeGS(i,1)>3
     Flags.Communication=1;
-    Params.Communication(i,3:5:5)=[0,0,0];
+    Params.Communication(i,3)=0;
+    Params.Communication(i,4)=0;
+    Params.Communication(i,5)=0;
+
     else
      Flags.Communication=0;
 end
-end
+
     if strcmp(states.Logic,'operational')
         if Flags.Day
             states.day = 1;
@@ -254,8 +265,14 @@ end
     current_charge = next_charge;
 
     DOD_vec(i) = DOD;
-    if Power.Total_Power<70
+    if Power.Total_Power<50
                 Flags.Communication=0;
+    end
+    if Flags.Day
+        PowerProduction_day(i)=Power.Production;
+        Power_consumption_day(i)=Power.Production-Power.Total_Power;
+    else
+         Power_consumption_night(i)=Power.Production-Power.Total_Power;
     end
 
 % %     %% Thermal
@@ -361,10 +378,15 @@ end
     SimData.orbit.v(i,:) = table2array(Current_Step_Orbit.v);
 %     end
 
+
     %% Time
     %time_vec(i+1) = time_vec(i) + dt;
     i = i+1;
 end
+DOD_avg=mean(DOD_vec);
+PowerProduction_day_avg=mean(PowerProduction_day);
+Power_consumption_day_avg=mean( Power_consumption_day);
+Power_consumption_night_avg=mean( Power_consumption_night);
 
 % r = Norm_Each_Row(SimData.orbit.r);
 % if ~Flags.Circular_Orbit
@@ -501,6 +523,10 @@ figure;
 subplot(4,1,1);
 hold on;
 plot(Time_vec/60,SimData.Power.Total_Power');
+% plot(Time_vec/60,100*DayOrNight_vec);
+% bar(Time_vec/60,10*AccessSumTimeGS(:,1));
+% plot(Time_vec/60,100*GRB_Alert);
+% legend('total power','day mode','communication mode','grb mode');
 xlabel('time [min]');
 ylabel('Total Power [w]');
 title('Total Power vs time');
@@ -508,21 +534,39 @@ grid on;
 % ylim([0 200]);
 subplot(4,1,2);
 hold on;
+plot(Time_vec/60,GRB_Alert);
+xlabel('time [min]');
+ylabel('GRB ');
+title('GRB vs time');
+grid on;
+subplot(4,1,3);
+hold on;
 plot(Time_vec/60,SimData.Power.Production');
 xlabel('time [min]');
 ylabel('Production [w]');
 title('Production vs time');
 grid on;
-subplot(4,1,3);
+subplot(4,1,4);
+hold all;
+bar(Time_vec/60,AccessSumTimeGS(:,1));
+xlabel('time [min]');
+ylabel('communicationtime[min] ');
+title('communication with the GS vs time');
+grid on;
+%%
+figure();
+subplot(2,1,1);
 hold on;
 plot(Time_vec/60,SimData.Batteries_Electric_Charge');
+
 xlabel('time [min]');
-ylabel('Batteries ElectricCharge [W]');
+ylabel('Batteries ElectricCharge [Wh]');
 title('Batteries ElectricCharge vs time');
 grid on;
-subplot(4,1,4)
+subplot(2,1,2)
 hold on;
-plot(Time_vec/60,DOD_vec);
+plot(Time_vec/60,100.*DOD_vec);
+yline(100*DOD_avg,'g','LineWidth',1.5);
 xlabel('time [min]');
 ylabel('%');
 title('DOD vs time');
@@ -560,3 +604,13 @@ grid on;
 %     drawnow;
 % 
 % end
+%%
+figure()
+% sgtitle(['Orbit For a=', num2str(a(1)), ' [km], i=', num2str(i(1)), '[deg]'])
+beta=table2array(DataBase.SatProperties(:,1));
+plot(Time_vec/60,beta);
+xlabel('time [min]');
+ylabel('beta [KM]');
+title('beta(t)');
+grid on;
+%ylim([min(a)-6400 max(a)-6340])

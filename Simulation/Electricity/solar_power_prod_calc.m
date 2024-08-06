@@ -1,4 +1,4 @@
-function PowerProduction = solar_power_prod_calc(Solar_Area, D, years, theta, Id, I0, mu, Xe, Xd)
+function PowerProduction = solar_power_prod_calc(Solar_Area, D, years, theta, Id, I0, mu)
 %--------------------------------------------------------------------------
 % PURPOSE: This function calculate the power production as per the solar
 %          panels area and a few other factors and efficiencies
@@ -18,12 +18,11 @@ function PowerProduction = solar_power_prod_calc(Solar_Area, D, years, theta, Id
 Po_Si = I0*mu ;     %[W/m^2]    I0 = total solar irradiance around earth
 %                               mu = Solar panel efficiency
 
-P_BOL = Po_Si*Id*cos(theta);       % [W/m^2]    Id = inherent degradation
+P_BOL = Po_Si*Id*abs(cos(theta));       % [W/m^2]    Id = inherent degradation
 
 P_EOL = P_BOL*(1-D)^years;    % [W/m^2]
 
-P_sa = Solar_Area*P_EOL;    % [W]
+PowerProduction = Solar_Area*P_EOL;    % [W]
 
-PowerProduction = P_sa*Td*(Te/Xe+Td/Xd)^(-1);   % [W]
 
 end
