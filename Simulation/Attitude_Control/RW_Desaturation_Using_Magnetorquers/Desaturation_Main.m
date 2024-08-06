@@ -10,6 +10,45 @@ set(0,'defaultLineLineWidth',1.5,'defaultLineMarkerSize',8)
 
 %% Initial conditions
 initial_phi   = deg2rad(0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 initial_theta = deg2rad(10);
 initial_psi   = deg2rad(20);
 eul_i = [initial_phi,initial_theta,initial_psi];

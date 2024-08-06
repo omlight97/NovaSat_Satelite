@@ -6,12 +6,12 @@ clc;
 clear variables;
 close all;
 set(0,'DefaultAxesFontName','Times','DefaultAxesFontSize',12)
-set(0,'defaultLineLineWidth',1.5,'defaultLineMarkerSize',8)
+set(0,'defaultLineLineWidth',1,'defaultLineMarkerSize',1)
 
 
 %% Initial conditions
 initial_phi   = deg2rad(0);
-initial_theta = deg2rad(10);
+initial_theta = deg2rad(0);
 initial_psi   = deg2rad(0);
 eul_i = [initial_phi,initial_theta,initial_psi];
 % Convert to quaternion
@@ -19,7 +19,7 @@ q_i = eul2quat(eul_i);
 q_i = flip(q_i);
 % Set initial conditions to simulink
 Params.q0 = q_i;
-Params.w0 = [0;0;5]; % Angular Velocity [deg/sec]
+Params.w0 = [30;30;30]; % Angular Velocity [deg/sec]
 Params.w0_W = 0*[1,1,1,1]';
 
 %% Target conditions
@@ -66,7 +66,7 @@ Params.Jw = m_rw/12 * (Dimensions_rw(1)^2 + Dimensions_rw(2)^2);
 % PD Controller gains:
 zeta = 0.7; % Damping ratio
 wn = 0.1; % omega_n - Natural frequency
-gain_mult = 1;
+gain_mult = 10;
 kp = gain_mult*2*wn*wn*Params.J(1,1); % Proportional controller gain
 kd = 2*zeta*wn*10*Params.J(1,1);      % Derivative controller gain
 Params.gains.kpx = kp;

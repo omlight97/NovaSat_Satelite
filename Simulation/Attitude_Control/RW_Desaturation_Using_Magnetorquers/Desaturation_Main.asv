@@ -8,11 +8,49 @@ close all;
 set(0,'DefaultAxesFontName','Times','DefaultAxesFontSize',12)
 set(0,'defaultLineLineWidth',1.5,'defaultLineMarkerSize',8)
 
-
 %% Initial conditions
 initial_phi   = deg2rad(0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 initial_theta = deg2rad(10);
-initial_psi   = deg2rad(0);
+initial_psi   = deg2rad(20);
 eul_i = [initial_phi,initial_theta,initial_psi];
 % Convert to quaternion
 q_i = eul2quat(eul_i);
@@ -20,7 +58,7 @@ q_i = flip(q_i);
 % Set initial conditions to simulink
 Params.q0 = q_i;
 Params.w0 = [0;0;5]; % Angular Velocity [deg/sec]
-Params.w0_W = 0*[1,1,1,1]';
+Params.w0_W = deg2rad([10;10;10;10]);
 
 %% Target conditions
 target_phi = deg2rad(0);
@@ -30,21 +68,17 @@ eul_t = [target_phi,target_theta,target_psi];
 % Convert to quaternion
 q_t = eul2quat(eul_t);
 q_t = flip(q_t);
-% Set initial conditions to simulink
+% Set target conditions to simulink
 Params.q_T = q_t;
 
-% External Torque 
-SolarRadiation_torque = [0;0;0];
-Drag_torque = [0;0;0];
-Params.External_Torque  = Drag_torque + SolarRadiation_torque;
-
-
-% Magnetotourquers  
-Magneto_torque = [0;0;0];
-Params.Magneto_Torque  = Magneto_torque;
-
+% External Torques
+SolarRadiation_External_Torque = [0;0;0];
+Drag_External_Torque = [0;0;0];
+Magneto_External_Torque = [0;0;0];
+Params.External_Torque  = SolarRadiation_External_Torque + Drag_External_Torque + Magneto_External_Torque;
 
 %% Pararmeters
+%Update to 16U!
 % Inertia matrix [kg*m^2]
 I_conv = 1/10^9;
 Ixx = 136536680.23*I_conv;
@@ -90,13 +124,14 @@ Params.Winv = pinv(Params.W); % Inverse of the wheel config matrix
 Params.torquebox = load('torquebox_modified.mat'); % Given by the manufacturer, the input is the controller output, the output is the torque working on each wheel 
 
 % Wheel limits 
-H_lim = 0.03; % Angular momentum limit [Nms] 
+H_lim = 0.0015;%0.03; % Angular momentum limit [Nms] 
 T_lim = 2e-3; % Torque limit [Nm]
+Params.H_lim = H_lim;
 
 ss_eul = 30; % Target Euler angle for cruise control loop [degree]
 
-%% Simulate and extract the data
 
+%% Simulate and extract the data
 Params.tf = 400; % Simulation time [sec]
 Outsim = sim('Control_Sim'); % Simulink model
 Data = Outsim.Data.signals.values(:,:,:);
@@ -173,7 +208,7 @@ legend('RW 1','RW 2','RW 3','RW 4');
 grid on
 title('Wheels angular momentum');
 
-% quaternion error (Shay said that it's unnecessary)
+% quaternion error 
 % figure,
 % plot(t,q_error)
 % hold on
@@ -194,51 +229,3 @@ plot(t,angle_error);
 xlabel('t[sec]');
 ylabel('\phi_{error}[deg]');
 grid on
-
-
-
-
-
-
-
-%% expirements:
-
-mu = 3.986004418*10^14; % [m^3/sec^2]
-R_eq = 6378.137*10^3; % [m]
-J2 = 1.08264*10^(-3); % 
-
-% Sat Initailize Conditions:
-alt = 700*10^3; %[m]
-a = alt + R_eq; %[m]
-ecc = 0.1;
-inc = deg2rad(55); %[rad]
-w = deg2rad(10); %[rad]
-Omega = deg2rad(15); %[rad]
-f = 0; %[rad]
-Sat0_vec_OE = [a; ecc; inc; w; Omega; f];
-Sat0_vec_Cart = OE2Cart(Sat0_vec_OE,mu);
-%Time span:
-t_init = 0;
-t_final = Params.tf; % simulation time [s]
-tspan = t_init:0.01:t_final;
-[t, Sat_vec_Cart] = ode45(@ODE2BP_Unperturbed_Cart,t, Sat0_vec_Cart);
-
-function dYdt = ODE2BP_Unperturbed_Cart(t, Y)
-    u = 3.986004418*10^(14); % [m^3/sec^2]
-
-    x = Y(1); % [m]
-    y = Y(2); % [m]
-    z = Y(3); % [m]
-    Vx = Y(4); % [m/s]
-    Vy = Y(5); % [m/s]
-    Vz = Y(6); % [m/s]
-
-    r = sqrt(x^2 + y^2 + z^2); %[m]
-
-    xddot = -(u*x)/(r^3); %-u/(r^(3/2)*x); % [m/s^2]
-    yddot = -(u*y)/(r^3); %-u/(r^(3/2)*y); % [m/s^2]
-    zddot = -(u*z)/(r^3); %-u/(r^(3/2)*z); % [m/s^2]
-    dYdt = [Vx;Vy;Vz;xddot;yddot;zddot]; % Ydt
-end
-
-

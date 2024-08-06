@@ -15,6 +15,14 @@ Flags2.Comms_Now = 0;
 addpath(genpath(pwd));
 [g, h] = IGRF13;
 
+psi_vec_full = [];
+Theta_vec_full = [];
+phi_vec_full = [];
+P_data_full = [];
+Q_data_full = [];
+R_data_full = [];
+       
+
 % Checks if the GUI file is in the current directory
 % for k = 1:length(file_names)
 %     if strcmp(file_names(k).name,'NOVASAT_MAIN.mlapp')
@@ -309,13 +317,20 @@ while  i <=  length(DataBase.SunTimes)
         %SimData.More_Data_Attitude_Control(i,:) = More_Data_Attitude_Control; %Name should be given!
     %end
        comm_vec(i) = Flags.Communication;
-
        psi_vec(i) = Next_Step_Angular.Psi;
-       Theta_vec(i)=Next_Step_Angular.Theta;
-       phi_vec(i)=Next_Step_Angular.Phi;
-       P_data(i)=Next_Step_Angular.P;
-       Q_data(i)=Next_Step_Angular.Q;
-       R_data(i)=Next_Step_Angular.R;
+       Theta_vec(i) = Next_Step_Angular.Theta;
+       phi_vec(i) = Next_Step_Angular.Phi;
+       P_data(i) = Next_Step_Angular.P;
+       Q_data(i) = Next_Step_Angular.Q;
+       R_data(i) = Next_Step_Angular.R;
+
+       
+       psi_vec_full = [psi_vec_full Next_Step_Angular.Psi_full];
+       Theta_vec_full=[Theta_vec_full Next_Step_Angular.Theta_full];
+       phi_vec_full=[phi_vec_full Next_Step_Angular.Phi_full];
+       P_data_full=[P_data_full Next_Step_Angular.P_full];
+       Q_data_full=[Q_data_full Next_Step_Angular.Q_full];
+       R_data_full=[R_data_full Next_Step_Angular.R_full];
        Current_Step_Angular = Next_Step_Angular;
        %   psi_vec(i) = 0;
        % Theta_vec(i)=0;
@@ -384,7 +399,7 @@ disp('Simulation has completed')
 
 %end
 %% plot
-
+Time_vec_control = linspace(Time_vec(1),Time_vec(end),length(psi_vec));
 figure()
 subplot(2,3,1);
 % sgtitle(['Orbit For a=', num2str(a(1)), ' [km], i=', num2str(i(1)), '[deg]'])
@@ -414,21 +429,21 @@ grid on;
 figure;
 subplot(2,3,1);
 hold on;
-plot(Time_vec/60,psi_vec);
+plot(Time_vec_control/60,psi_vec);
 xlabel('time [min]');
 ylabel('psi [rad]');
 title('psi vs time');
 grid on;
 subplot(2,3,2);
 hold on;
-plot(Time_vec/60,Theta_vec);
+plot(Time_vec_control/60,Theta_vec);
 xlabel('time [min]');
 ylabel('theta [rad]');
 title('theta vs time');
 grid on;
 subplot(2,3,3);
 hold on;
-plot(Time_vec/60,phi_vec);
+plot(Time_vec_control/60,phi_vec);
 xlabel('time [min]');
 ylabel('phi [rad]');
 title('phi vs time');
@@ -548,58 +563,68 @@ figure
 subplot(4,2,1)
     plot(SimData.Time_vec/60 ,TW1)
     title('Reaction wheel 1 torque')
-    xlabel('time[sec]')
+    xlabel('time[min]')
     ylabel('Torque[Nm]')
     grid on
+    xlim([0,91])
+
 subplot(4,2,3)
     plot(SimData.Time_vec/60 ,TW2)
-
     title('Reaction wheel 2 torque')
-    xlabel('time[sec]')
+    xlabel('time[min]')
     ylabel('Torque[Nm]')
     grid on
+    xlim([0,91])
+
 subplot(4,2,5)
     plot(SimData.Time_vec/60 ,TW3)
-
     title('Reaction wheel 3 torque')
-    xlabel('time[sec]')
+    xlabel('time[min]')
     ylabel('Torque[Nm]')
     grid on
+    xlim([0,91])
+
 subplot(4,2,7)
     plot(SimData.Time_vec/60 ,TW4)
-
     title('Reaction wheel 4 torque')
-    xlabel('time[sec]')
+    xlabel('time[min]')
     ylabel('Torque[Nm]')
     grid on
+    xlim([0,91])
+
 subplot(4,2,2)
     plot(SimData.Time_vec/60 ,HW1)
     title('Reaction wheel 1 angular momentum');
     ylabel('Angular momentum [Nms]');
-    xlabel('time[sec]')
+    xlabel('time[min]')
     grid on
+    xlim([0,91])
 
 subplot(4,2,4)
     plot(SimData.Time_vec/60 ,HW2)
     title('Reaction wheel 2 angular momentum');
     ylabel('Angular momentum [Nms]');
-    xlabel('time[sec]')
+    xlabel('time[min]')
     grid on
+    xlim([0,91])
 
 
 subplot(4,2,6)
     plot(SimData.Time_vec/60 ,HW3)
     title('Reaction wheel 3 angular momentum');
     ylabel('Angular momentum [Nms]');
-    xlabel('time[sec]')
+    xlabel('time[min]')
     grid on
+    xlim([0,91])
 
 
 subplot(4,2,8)
     plot(SimData.Time_vec/60 ,HW4)
     title('Reaction wheel 4 angular momentum');
     ylabel('Angular momentum [Nms]');
-    xlabel('time[sec]')
+    xlabel('time[min]')
+        xlim([0,91])
+
     grid on
 
 
@@ -627,58 +652,70 @@ subplot(4,2,8)
 
 figure
 subplot(3,3,1)
-    plot(SimData.Time_vec/60 ,phi_vec * 180/ pi)
+    plot(Time_vec_control/60 ,phi_vec * 180/ pi)
     title('\phi^\circ in time')
-    xlabel('time[sec]')
-    ylabel('Torque[Nm]')
+    xlabel('time[min]')
+    ylabel('Angle[\circ]')
     grid on
+        xlim([0,91])
+
 subplot(3,3,2)
-    plot(SimData.Time_vec/60 ,Theta_vec * 180/pi)
+    plot(Time_vec_control/60 ,Theta_vec * 180/pi)
 
     title('\Theta^\circ in time')
-    xlabel('time[sec]')
-    ylabel('Torque[Nm]')
+    xlabel('time[min]')
+    ylabel('Angle[\circ]')
     grid on
+        xlim([0,91])
+
 subplot(3,3,3)
-    plot(SimData.Time_vec/60 ,psi_vec * 180 / pi)
+    plot(Time_vec_control/60 ,psi_vec * 180 / pi)
 
     title('\psi^\circ in time ')
-    xlabel('time[sec]')
-    ylabel('Torque[Nm]')
+    xlabel('time[min]')
+    ylabel('Angle[\circ]')
     grid on
-subplot(3,3,4)
-    plot(SimData.Time_vec/60 ,P_data)
+        xlim([0,91])
 
-    title('Roll rate [rad/s]')
-    xlabel('time[sec]')
-    ylabel('Torque[Nm]')
+subplot(3,3,4)
+    plot(Time_vec_control/60 ,R_data * 180 / pi)
+
+    title('Roll rate [\circ/s]')
+    xlabel('time[min]')
+    ylabel('Angular Velocity[\circ/s]')
     grid on
+    xlim([0,91])
+
 subplot(3,3,5)
-    plot(SimData.Time_vec/60 ,Q_data)
+    plot(Time_vec_control/60 ,Q_data * 180 / pi)
     title('Pitch rate [\circ/s]');
-    ylabel('Angular momentum [Nms]');
-    xlabel('time[sec]')
+    ylabel('Angular Velocity[\circ/s]')
+    xlabel('time[min]')
     grid on
+    xlim([0,91])
 
 subplot(3,3,6)
-    plot(SimData.Time_vec/60 ,R_data)
+    plot(Time_vec_control/60 ,P_data * 180 / pi)
     title('Yaw rate [\circ/s]');
-    ylabel('Angular momentum [Nms]');
-    xlabel('time[sec]')
+    ylabel('Angular Velocity[\circ/s]')
+    xlabel('time[min]')
     grid on
+    xlim([0,91])
 
 
 subplot(3,3,7)
     plot(SimData.Time_vec/60 ,GRB_Alert)
     title('GRB state');
-    xlabel('time[sec]')
+    xlabel('time[min]')
     grid on
+    xlim([0,91])
 
 
 subplot(3,3,8)
     plot(SimData.Time_vec/60 ,comm_vec)
     title('Communication state');
-    xlabel('time[sec]')
+    xlabel('time[min]')
+    xlim([0,91])
     grid on
 
 
@@ -686,7 +723,8 @@ subplot(3,3,8)
 subplot(3,3,9)
     plot(SimData.Time_vec/60 ,DayOrNight_vec)
     title('Day - 1 \ Night - 0 state');
-    xlabel('time[sec]')
+    xlabel('time[min]')
+    xlim([0,91])
     grid on
 
 

@@ -103,25 +103,34 @@ else
     % Export data from simulation
     Data = Outsim.Data.signals.values(:,:,:);
     Data = reshape(Data,[26 length(Data)]);
-    q_f = Data(1:4,end); % final quaternion
-    w_f = Data(5:7,end); % [rad/sec] final angular velocity
+    q_f = Data(1:4,:); % final quaternion
+    w_f = Data(5:7,:); % [rad/sec] final angular velocity
     q_error = Data(8:11,end); % error quaternion
     w_error = Data(12:14,end);% [rad/sec] angular velocity error
-    Tc = Data(15:17,end); % [Nm] Torque command
-    TW = Data(19:22,end); % Torque on wheels
-    HW = Data(23:26,end); % Angular momentum on wheels
+    Tc = Data(15:17,:); % [Nm] Torque command
+    TW = Data(19:22,:); % Torque on wheels
+    HW = Data(23:26,:); % Angular momentum on wheels
     % Convert quaternion to euler angles - ZYX sequnce
-    eul_f = quat2eul(flip(q_f)');
+    eul_f = quat2eul(flip(q_f)')';
     eul_error = quat2eul(flip(q_error)');
 
     % Calculated next angular state
-    Next_Step_Angular.Psi = eul_f(1);
-    Next_Step_Angular.Theta = eul_f(2);
-    Next_Step_Angular.Phi = eul_f(3);
+    Next_Step_Angular.Psi = eul_f(1,end);
+    Next_Step_Angular.Theta = eul_f(2,end);
+    Next_Step_Angular.Phi = eul_f(3,end);
 
-    Next_Step_Angular.P = w_f(1);
-    Next_Step_Angular.Q = w_f(2);
-    Next_Step_Angular.R = w_f(3);
+    Next_Step_Angular.P = w_f(1,end);
+    Next_Step_Angular.Q = w_f(2,end);
+    Next_Step_Angular.R = w_f(3,end);
+
+
+    Next_Step_Angular.Psi_full = eul_f(1,:);
+    Next_Step_Angular.Theta_full = eul_f(2,:);
+    Next_Step_Angular.Phi_full = eul_f(3,:);
+
+    Next_Step_Angular.P_full = w_f(1,:);
+    Next_Step_Angular.Q_full = w_f(2,:);
+    Next_Step_Angular.R_full = w_f(3,:);
 
     Params.Attitude_Control_Data.Psi_error = eul_error(1);
     Params.Attitude_Control_Data.Theta_error = eul_error(2);
