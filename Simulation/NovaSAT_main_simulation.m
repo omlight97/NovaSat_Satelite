@@ -42,13 +42,13 @@ addpath(genpath(pwd));
 % [DataBase2.SunTimes, DataBase2.SunPosition]     = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_SunPosition']);
 % [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK([pwd,'\NOVASAT-16U_MatlabReport_-_EarthPosition']);
 try
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_MatlabReport_-_SunPosition']);
-    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\3 days/NOVASAT-16U_MatlabReport_-_EarthPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\3 days simulation - min Beta/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\3 days simulation - min Beta/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\3 days simulation - min Beta/NOVASAT-16U_MatlabReport_-_EarthPosition']);
 catch
-    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\3 days /NOVASAT-16U_MatlabReport_-_SunPosition']);
-    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\3 days /NOVASAT-16U_FullSimulation']);
-    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\3 days /NOVASAT-16U_MatlabReport_-_EarthPosition']);
+    [DataBase.SunTimes, DataBase.SunPosition]     = Read_Data_From_STK2([pwd,'\3 days simulation - min Beta/NOVASAT-16U_MatlabReport_-_SunPosition']);
+    [DataBase.SatTimes, DataBase.SatProperties]   = Read_Data_From_STK2([pwd,'\3 days simulation - min Beta/NOVASAT-16U_FullSimulation']);
+    [DataBase.EarthTimes, DataBase.EarthPosition] = Read_Data_From_STK2([pwd,'\3 days simulation - min Beta/NOVASAT-16U_MatlabReport_-_EarthPosition']);
 end
 
 e     = DataBase.SatProperties(:,9);
@@ -158,7 +158,7 @@ i = 1;
 
 Alpha_angle = deg2rad(20); 
 states.Logic = 'operational';
-current_charge = 20; % [Wh]
+current_charge = Params.Max_capacity; % [Wh]
 Thermal.Average_Temperature = Params.Initial_Temperature;
 
 
@@ -171,7 +171,8 @@ GRB_Alert= Get_GRB_Alert(Time_vec);
 Flags.sun_search.initial_flag = 1;
 Params.Communication=zeros(length(phi_vec),6);
 count=1;
-
+j=1;
+q=1;
 %%
 while  i <=  length(DataBase.SunTimes)
     if GRB_Alert(i)
@@ -203,7 +204,7 @@ while  i <=  length(DataBase.SunTimes)
     % Params.Communication(i,:)=PositionCommTime(i,:);
 %     if Flags.Skip
 if i>2
-    if GRB_Alert(i-count) &&  not(GRB_Alert(i)) && count <10
+    if GRB_Alert(i-count) &&  not(GRB_Alert(i)) && count <10 && DOD<0.3
     if PositionCommTime(i,2)>10
         Flags.Communication=1;
         Params.Communication(i,:)=PositionCommTime(i,:);
@@ -213,7 +214,7 @@ if i>2
     count=count+1;
     end
 end
-if count >10
+if count >=10
     count=1;
 end
 if AccessSumTimeGS(i,1)>3
@@ -273,14 +274,16 @@ end
     current_charge = next_charge;
 
     DOD_vec(i) = DOD;
-    if Power.Total_Power<50
+    if Power.Total_Power<60 &&  DOD>0.3
                 Flags.Communication=0;
     end
     if Flags.Day
-        PowerProduction_day(i)=Power.Production;
-        Power_consumption_day(i)=Power.Production-Power.Total_Power;
+        PowerProduction_day(j)=Power.Production;
+        Power_consumption_day(j)=Power.Production-Power.Total_Power;
+        j=j+1;
     else
-         Power_consumption_night(i)=Power.Production-Power.Total_Power;
+         Power_consumption_night(q)=Power.Production-Power.Total_Power;
+         q=q+1;
     end
 
 % %     %% Thermal
@@ -396,11 +399,13 @@ end
     %time_vec(i+1) = time_vec(i) + dt;
     i = i+1;
 end
+%%
 DOD_avg=mean(DOD_vec);
-PowerProduction_day_avg=mean(PowerProduction_day);
-Power_consumption_day_avg=mean( Power_consumption_day);
-Power_consumption_night_avg=mean( Power_consumption_night);
-
+% PowerProduction_day=remove(PowerProduction_day,0);
+PowerProduction_day_avg=sum(PowerProduction_day)/length(PowerProduction_day);
+Power_consumption_day_avg=sum( Power_consumption_day)/length(Power_consumption_day);
+Power_consumption_night_avg=sum( Power_consumption_night)/length(Power_consumption_night);
+%%
 % r = Norm_Each_Row(SimData.orbit.r);
 % if ~Flags.Circular_Orbit
 % 
@@ -625,5 +630,15 @@ plot(Time_vec/60,beta);
 xlabel('time [min]');
 ylabel('beta [KM]');
 title('beta(t)');
+grid on;
+%ylim([min(a)-6400 max(a)-6340])
+figure()
+% sgtitle(['Orbit For a=', num2str(a(1)), ' [km], i=', num2str(i(1)), '[deg]'])
+beta=["beta=0" "beta=20" "beta=60"]
+time_day=[2720 2752 3586]
+bar(beta,time_day);
+xlabel('time [min]');
+ylabel('beta [degree]');
+title('time of dat(beta angle)');
 grid on;
 %ylim([min(a)-6400 max(a)-6340])

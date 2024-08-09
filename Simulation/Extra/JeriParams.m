@@ -70,7 +70,7 @@ Flags.Start_at_RAAN = 1; % default
 
 %% Electricity
 
-Params.Max_capacity = 45; % Maximum allowed power [Wh] 
+Params.Max_capacity = 86; % Maximum allowed power [Wh] 
 Params.vertical_power_produc = 133.2847; % maximum solar power production [w]
 
 % everything is in [w]

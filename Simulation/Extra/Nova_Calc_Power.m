@@ -37,10 +37,10 @@ for par = Params.power_budget.Properties.VariableNames
 end
 
 % total power column from power budget PowerProduction
-power_consumption = 0.8*Mode_data(:,'Total_Power').Variables;
+power_consumption = Mode_data(:,'Total_Power').Variables;
 % power production calculation
 if Flags.IsDay
-    PowerProduction = solar_power_prod_calc(Params.SolarArea, Params.D, Params.years, theta_angle, Params.Id, Params.I0, Params.SolarEfficiency);
+    PowerProduction = 0.8*solar_power_prod_calc(Params.SolarArea, Params.D, Params.years, theta_angle, Params.Id, Params.I0, Params.SolarEfficiency);
     Total_Power = PowerProduction - power_consumption; %[w] Power available to charge the batteries
     current_charge_next = Total_Power*dt/3600;
 

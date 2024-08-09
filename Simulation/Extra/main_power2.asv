@@ -11,7 +11,7 @@ max_charge = Params.Max_capacity; %[Wh]
 
 [Power, next_charge] = Nova_Calc_Power(Params, theta_angle, current_charge, dt, Flags);
 
-DOD = 1 - (max_charge - current_charge)/max_charge;
+DOD = ( max_charge-next_charge)/max_charge;
 
 
 end
